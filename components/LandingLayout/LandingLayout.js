@@ -32,7 +32,7 @@ export default LandingLayout = (props) => {
             }}>
                 <Text style={{
                     textAlign: 'center'
-                }} onPress={() => fire.auth().signOut()}>C</Text>
+                }} onPress={props.signout}>C</Text>
             </View>
             {/* <Button onPress={() => fire.auth().signOut()}>
                 <Text>Sign out</Text>

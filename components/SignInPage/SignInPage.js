@@ -19,22 +19,23 @@ export default SignInPage = (props) => {
             flex: 1,
             width: '100%'
         }}>
-            <H1 style={{
-                textAlign: 'center',
-                marginTop: 40
-            }}>Sign in</H1>
-
             <Content style={{
                 flex: 1,
             }}>
+                <H1 style={{
+                    textAlign: 'center',
+                    marginTop: 40
+                }}>Sign in</H1>
+
                 {props.spinner ? (
                     <View style={{
                         position: 'absolute',
                         flex: 1,
                         width: '100%',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        zIndex: 100
                     }}>
-                        <Spinner />
+                        <Spinner color='blue' />
                     </View>
                 ) : null}
 
@@ -45,11 +46,20 @@ export default SignInPage = (props) => {
                 }}>
                     <Item floatingLabel>
                         <Label>Email</Label>
-                        <Input onChangeText={props.inputEmailValChange} value={props.signEmailValue} />
+                        <Input
+                            autoCapitalize='none'
+                            keyboardType='email-address'
+                            returnKeyType='done'
+                            onChangeText={props.inputEmailValChange}
+                            value={props.signEmailValue} />
                     </Item>
                     <Item floatingLabel last>
                         <Label>Password</Label>
-                        <Input secureTextEntry={true} onChangeText={props.inputPassValChange} value={props.signPassValue} />
+                        <Input
+                            secureTextEntry={true}
+                            returnKeyType='go'
+                            onChangeText={props.inputPassValChange}
+                            value={props.signPassValue} />
                     </Item>
                     <Button block onPress={props.loginEvent} style={{
                         marginTop: 40

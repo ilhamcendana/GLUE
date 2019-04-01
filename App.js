@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Font } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View, ScrollView, Dimensions, Text, FlatList } from 'react-native';
-import { Header, Container, Left, Body, Right, Title, Content, Button, Spinner, Drawer, Icon, H2 } from 'native-base';
+import { StyleSheet, Animated, View, ScrollView, Dimensions, Text, FlatList } from 'react-native';
+import { Header, Container, Toast, Left, Body, Right, Title, Content, Button, Spinner, Drawer, Icon, H2 } from 'native-base';
 import fire from './config';
 
 
@@ -25,7 +25,10 @@ export default class App extends React.Component {
     InputPengaduan: false,
     loaded: 10,
     spinner: false,
-    gotoSignup: false
+    gotoSignup: false,
+    showToast: false,
+    errorLoginMessage: '',
+    toastAnim: new Animated.Value(0)
   }
 
   fetching = () => {
@@ -50,11 +53,14 @@ export default class App extends React.Component {
       if (user) {
         this.setState({ user });
       } else {
-        this.setState({ user: null, signEmailValue: '', signPassValue: '', spinner: false });
+        this.setState({ user: null, signEmailValue: '', signPassValue: '' });
       }
     })
   };
 
+  signOut = () => {
+    fire.auth().signOut().then(() => this.setState({ spinner: false }));
+  }
 
   //ALL LOGIN EVENT
   inputEmailValChange = (e) => {
@@ -67,8 +73,18 @@ export default class App extends React.Component {
 
   loginEvent = () => {
     const { signEmailValue, signPassValue } = this.state;
-    fire.auth().signInWithEmailAndPassword(signEmailValue, signPassValue);
     this.setState({ spinner: true });
+    fire.auth().signInWithEmailAndPassword(signEmailValue, signPassValue)
+      .then()
+      .catch((e) => {
+        if (e === 'The email address is badly formatted.' || 'The password is invalid or the user does not have a password.') {
+          this.setState({ errorLoginMessage: 'Wrong email or password!' });
+        } else {
+          this.setState({ errorLoginMessage: e });
+        }
+        this.setState({ showToast: true, spinner: false });
+        setTimeout(() => this.setState({ showToast: false }), 2000);
+      });
   }
   //END ALL LOGIN EVENT -----------------------------
 
@@ -88,7 +104,24 @@ export default class App extends React.Component {
   }
   //END ALL SIGNUP EVENT -----------------------------
 
+
+
   render() {
+    let toast = (
+      <View style={{
+        width: '100%',
+        backgroundColor: '#e51624',
+        position: 'absolute',
+        zIndex: 100,
+        top: 0,
+        paddingVertical: 20
+      }}>
+        <Text style={{ color: '#fff', textAlign: 'center' }}>{this.state.errorLoginMessage}</Text>
+      </View>
+    );
+    // if (this.state.showToast) {
+
+    // }
     return (
       <Container style={styles.container}>
         <Header style={styles.header}>
@@ -96,10 +129,10 @@ export default class App extends React.Component {
             <Title style={{ color: '#fff' }}>GLUE</Title>
           </Body>
         </Header>
-
+        {this.state.showToast ? toast : null}
         {this.state.user !== null ? (
           <>
-            <LandingLayout />
+            <LandingLayout signout={this.signOut} />
           </>
         ) : (
             <>
@@ -126,33 +159,6 @@ export default class App extends React.Component {
                 )}
             </>
           )}
-        {/*
-        <Header style={styles.header}>
-          <Left>
-            <Button transparent onPress={() => this.state.postOpen ? this.setState({ InputPengaduan: true, postOpen: false }) : this.setState({ InputPengaduan: false, postOpen: true })}>
-              <Icon type='AntDesign' name={this.state.InputPengaduan ? 'home' : 'form'} style={{ color: '#fff', fontSize: 25 }} />
-            </Button>
-          </Left>
-          <Body>
-            <Text style={{ fontWeight: '100', color: '#fff', fontSize: 25 }}>Glue</Text>
-          </Body>
-          <Right>
-            <Button transparent>
-              <Icon type='Ionicons' name='refresh' style={{ color: '#fff', fontSize: 25 }} onPress={this.fetching} />
-            </Button>
-          </Right>
-        </Header>
-        <ScrollView>
-          
-          {this.state.postOpen ? posts : null}
-          {this.state.postOpen && this.state.loaded <= this.state.post.length ? <Button block light style={{ marginVertical: 30 }} onPress={() => this.setState({
-            loaded: this.state.loaded + 10
-          })}>
-            <Text>See More</Text>
-          </Button> : <H2 style={{ textAlign: 'center', marginVertical: 20 }}>That's it</H2>}
-          {this.state.InputPengaduan ? <InputPengaduan /> : null}
-
-        </ScrollView> */}
 
 
       </Container>

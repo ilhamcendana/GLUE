@@ -19,14 +19,15 @@ export default SignUpPage = (props) => {
             flex: 1,
             width: '100%'
         }}>
+            <Content style={{
+                flex: 1,
+            }}>
+            
             <H1 style={{
                 textAlign: 'center',
                 marginTop: 40
             }}>Sign up</H1>
 
-            <Content style={{
-                flex: 1,
-            }}>
                 {props.spinner ? (
                     <View style={{
                         position: 'absolute',
@@ -34,7 +35,7 @@ export default SignUpPage = (props) => {
                         width: '100%',
                         justifyContent: 'center'
                     }}>
-                        <Spinner />
+                        <Spinner color='blue' />
                     </View>
                 ) : null}
 
@@ -45,11 +46,20 @@ export default SignUpPage = (props) => {
                 }}>
                     <Item floatingLabel>
                         <Label>Email</Label>
-                        <Input onChangeText={props.signupEmailValChange} value={props.signupEmailValue} />
+                        <Input
+                            autoCapitalize='none'
+                            keyboardType='email-address'
+                            returnKeyType='done'
+                            onChangeText={props.signupEmailValChange}
+                            value={props.signupEmailValue} />
                     </Item>
                     <Item floatingLabel last>
                         <Label>Password</Label>
-                        <Input secureTextEntry={true} onChangeText={props.signupPassValChange} value={props.signupPassValue} />
+                        <Input
+                            returnKeyType='go'
+                            secureTextEntry={true}
+                            onChangeText={props.signupPassValChange}
+                            value={props.signupPassValue} />
                     </Item>
                     <Button block onPress={props.signupEvent} style={{
                         marginTop: 40
