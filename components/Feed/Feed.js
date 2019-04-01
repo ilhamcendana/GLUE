@@ -1,54 +1,221 @@
 import React from 'react';
-import { StyleSheet, View, Image } from 'react-native';
-import { Container, Header, Content, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, Right } from 'native-base';
+import { View, Dimensions, Image, ScrollView } from 'react-native';
+import { Container, Header, Content, Right, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body } from 'native-base';
 
-export default Feed = (props) => {
-    const dotdot = props.body.length > 200 ? '...' : '';
+export default Feed = () => {
+
     return (
+        <Container>
+            <Content>
+                <ScrollView>
+                    <Card style={{ flex: 0 }}>
+                        <CardItem>
+                            <Left>
+                                <Thumbnail source={{ uri: 'Image URL' }} />
+                                <Body>
+                                    <Text>NativeBase</Text>
+                                    <Text note>April 15, 2016</Text>
+                                </Body>
+                            </Left>
+                        </CardItem>
+                        <CardItem>
+                            <Body>
+                                <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} />
+                                <Text>
+                                //Your text here
+                                </Text>
+                            </Body>
+                        </CardItem>
+                        <CardItem>
+                            <Left>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-up" type='Feather' />
+                                    <Text>10</Text>
+                                </Button>
+                            </Left>
 
-        <Content scrollEnabled={false}>
-            <Card style={{ flex: 0 }}>
-                <CardItem>
-                    <Left>
-                        <Thumbnail source={{ uri: 'https://fakeimg.pl/300/' }} />
-                        <Body>
-                            <Text>{props.nama}</Text>
-                            <Text note>{props.time},{' '}{props.date}</Text>
-                        </Body>
-                    </Left>
-                </CardItem>
-                <CardItem>
-                    <Body>
-                        <Image source={{ uri: 'https://dummyimage.com/600x400/000/fff' }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
-                        <Text>
-                            {props.body + dotdot}
-                        </Text>
-                    </Body>
-                </CardItem>
-                <CardItem>
-                    <Left>
-                        <Button transparent>
-                            <Icon type='AntDesign' name="upcircleo" style={{ color: '#2CAA3F' }} />
-                            <Text style={{ color: '#2CAA3F' }}>19</Text>
-                        </Button>
-                    </Left>
-                    <Right>
-                        <Button transparent>
-                            <Icon type='AntDesign' name="downcircleo" style={{ color: '#b71919' }} />
-                            <Text style={{ color: '#b71919' }}>12</Text>
-                        </Button>
-                    </Right>
-                </CardItem>
-            </Card>
-        </Content>
+                            <Body>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-down" type='Feather' />
+                                    <Text>1</Text>
+                                </Button>
+                            </Body>
 
+                            <Right>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="chatbubbles" />
+                                    <Text>123</Text>
+                                </Button>
+                            </Right>
+                        </CardItem>
+                    </Card>
+                    <Card style={{ flex: 0 }}>
+                        <CardItem>
+                            <Left>
+                                <Thumbnail source={{ uri: 'Image URL' }} />
+                                <Body>
+                                    <Text>NativeBase</Text>
+                                    <Text note>April 15, 2016</Text>
+                                </Body>
+                            </Left>
+                        </CardItem>
+                        <CardItem>
+                            <Body>
+                                <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} />
+                                <Text>
+                                //Your text here
+                                </Text>
+                            </Body>
+                        </CardItem>
+                        <CardItem>
+                            <Left>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-up" type='Feather' />
+                                    <Text>10</Text>
+                                </Button>
+                            </Left>
+
+                            <Body>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-down" type='Feather' />
+                                    <Text>1</Text>
+                                </Button>
+                            </Body>
+
+                            <Right>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="chatbubbles" />
+                                    <Text>123</Text>
+                                </Button>
+                            </Right>
+                        </CardItem>
+                    </Card>
+                    <Card style={{ flex: 0 }}>
+                        <CardItem>
+                            <Left>
+                                <Thumbnail source={{ uri: 'Image URL' }} />
+                                <Body>
+                                    <Text>NativeBase</Text>
+                                    <Text note>April 15, 2016</Text>
+                                </Body>
+                            </Left>
+                        </CardItem>
+                        <CardItem>
+                            <Body>
+                                <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} />
+                                <Text>
+                                //Your text here
+                                </Text>
+                            </Body>
+                        </CardItem>
+                        <CardItem>
+                            <Left>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-up" type='Feather' />
+                                    <Text>10</Text>
+                                </Button>
+                            </Left>
+
+                            <Body>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-down" type='Feather' />
+                                    <Text>1</Text>
+                                </Button>
+                            </Body>
+
+                            <Right>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="chatbubbles" />
+                                    <Text>123</Text>
+                                </Button>
+                            </Right>
+                        </CardItem>
+                    </Card>
+                    <Card style={{ flex: 0 }}>
+                        <CardItem>
+                            <Left>
+                                <Thumbnail source={{ uri: 'Image URL' }} />
+                                <Body>
+                                    <Text>NativeBase</Text>
+                                    <Text note>April 15, 2016</Text>
+                                </Body>
+                            </Left>
+                        </CardItem>
+                        <CardItem>
+                            <Body>
+                                <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} />
+                                <Text>
+                                //Your text here
+                                </Text>
+                            </Body>
+                        </CardItem>
+                        <CardItem>
+                            <Left>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-up" type='Feather' />
+                                    <Text>10</Text>
+                                </Button>
+                            </Left>
+
+                            <Body>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-down" type='Feather' />
+                                    <Text>1</Text>
+                                </Button>
+                            </Body>
+
+                            <Right>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="chatbubbles" />
+                                    <Text>123</Text>
+                                </Button>
+                            </Right>
+                        </CardItem>
+                    </Card>
+                    <Card style={{ flex: 0 }}>
+                        <CardItem>
+                            <Left>
+                                <Thumbnail source={{ uri: 'Image URL' }} />
+                                <Body>
+                                    <Text>NativeBase</Text>
+                                    <Text note>April 15, 2016</Text>
+                                </Body>
+                            </Left>
+                        </CardItem>
+                        <CardItem>
+                            <Body>
+                                <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} />
+                                <Text>
+                                //Your text here
+                                </Text>
+                            </Body>
+                        </CardItem>
+                        <CardItem>
+                            <Left>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-up" type='Feather' />
+                                    <Text>10</Text>
+                                </Button>
+                            </Left>
+
+                            <Body>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="arrow-down" type='Feather' />
+                                    <Text>1</Text>
+                                </Button>
+                            </Body>
+
+                            <Right>
+                                <Button transparent textStyle={{ color: '#87838B' }}>
+                                    <Icon name="chatbubbles" />
+                                    <Text>123</Text>
+                                </Button>
+                            </Right>
+                        </CardItem>
+                    </Card>
+                </ScrollView>
+            </Content>
+        </Container>
     );
 }
 
-const styles = StyleSheet.create({
-    feed: {
-        width: '100%',
-        flex: 1,
-        backgroundColor: 'green'
-    }
-});

@@ -13,7 +13,7 @@ import {
     H1
 } from 'native-base';
 
-export default SignInPage = (props) => {
+export default SignUpPage = (props) => {
     return (
         <Container style={{
             flex: 1,
@@ -22,7 +22,7 @@ export default SignInPage = (props) => {
             <H1 style={{
                 textAlign: 'center',
                 marginTop: 40
-            }}>Sign in</H1>
+            }}>Sign up</H1>
 
             <Content style={{
                 flex: 1,
@@ -45,24 +45,24 @@ export default SignInPage = (props) => {
                 }}>
                     <Item floatingLabel>
                         <Label>Email</Label>
-                        <Input onChangeText={props.inputEmailValChange} value={props.signEmailValue} />
+                        <Input onChangeText={props.signupEmailValChange} value={props.signupEmailValue} />
                     </Item>
                     <Item floatingLabel last>
                         <Label>Password</Label>
-                        <Input secureTextEntry={true} onChangeText={props.inputPassValChange} value={props.signPassValue} />
+                        <Input secureTextEntry={true} onChangeText={props.signupPassValChange} value={props.signupPassValue} />
                     </Item>
-                    <Button block onPress={props.loginEvent} style={{
+                    <Button block onPress={props.signupEvent} style={{
                         marginTop: 40
                     }}>
-                        <Text>Sign in</Text>
+                        <Text>Sign up</Text>
                     </Button>
                     <View style={{
                         marginTop: 20,
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <Text>or</Text>
-                        <Button transparent onPress={props.gotoSignup} block><Text>Sign up</Text></Button>
+                        <Text>Already have an account?</Text>
+                        <Button transparent onPress={props.gotoSignup} block><Text>Sign in</Text></Button>
                     </View>
                 </Form>
             </Content>
@@ -70,6 +70,3 @@ export default SignInPage = (props) => {
     );
 }
 
-const styles = StyleSheet.create({
-
-});
