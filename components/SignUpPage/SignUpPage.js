@@ -22,11 +22,11 @@ export default SignUpPage = (props) => {
             <Content style={{
                 flex: 1,
             }}>
-            
-            <H1 style={{
-                textAlign: 'center',
-                marginTop: 40
-            }}>Sign up</H1>
+
+                <H1 style={{
+                    textAlign: 'center',
+                    marginTop: 40
+                }}>Sign up</H1>
 
                 {props.spinner ? (
                     <View style={{
@@ -54,15 +54,17 @@ export default SignUpPage = (props) => {
                             value={props.signupEmailValue} />
                     </Item>
                     <Item floatingLabel last>
-                        <Label>Password</Label>
+                        <Label>Password must be 6 characters long or more!</Label>
                         <Input
                             returnKeyType='go'
                             secureTextEntry={true}
                             onChangeText={props.signupPassValChange}
-                            value={props.signupPassValue} />
+                            value={props.signupPassValue}
+                        />
                     </Item>
                     <Button block onPress={props.signupEvent} style={{
-                        marginTop: 40
+                        marginTop: 40,
+                        backgroundColor: '#640164'
                     }}>
                         <Text>Sign up</Text>
                     </Button>
@@ -72,7 +74,7 @@ export default SignUpPage = (props) => {
                         justifyContent: 'center'
                     }}>
                         <Text>Already have an account?</Text>
-                        <Button transparent onPress={props.gotoSignup} block><Text>Sign in</Text></Button>
+                        <Button transparent onPress={props.gotoSignup} block><Text style={{ color: '#640164' }}>Sign in</Text></Button>
                     </View>
                 </Form>
             </Content>

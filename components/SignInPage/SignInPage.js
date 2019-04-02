@@ -59,10 +59,12 @@ export default SignInPage = (props) => {
                             secureTextEntry={true}
                             returnKeyType='go'
                             onChangeText={props.inputPassValChange}
-                            value={props.signPassValue} />
+                            value={props.signPassValue}
+                            autoCapitalize='none' />
                     </Item>
                     <Button block onPress={props.loginEvent} style={{
-                        marginTop: 40
+                        marginTop: 40,
+                        backgroundColor: '#640164'
                     }}>
                         <Text>Sign in</Text>
                     </Button>
@@ -72,7 +74,7 @@ export default SignInPage = (props) => {
                         justifyContent: 'center'
                     }}>
                         <Text>or</Text>
-                        <Button transparent onPress={props.gotoSignup} block><Text>Sign up</Text></Button>
+                        <Button transparent onPress={props.gotoSignup} block><Text style={{ color: '#640164' }}>Sign up</Text></Button>
                     </View>
                 </Form>
             </Content>

@@ -20,7 +20,7 @@ export default Feed = () => {
                         </CardItem>
                         <CardItem>
                             <Body>
-                                <Image source={{ uri: 'Image URL' }} style={{ height: 200, width: 200, flex: 1 }} />
+                                <Image source={{ uri: '' }} style={{ height: 200, width: 200, flex: 1 }} />
                                 <Text>
                                 //Your text here
                                 </Text>

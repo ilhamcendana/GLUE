@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { Font } from 'expo';
+import { Font, AppLoading } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Animated, View, ScrollView, Dimensions, Text, FlatList } from 'react-native';
+import { StyleSheet, Animated, View, ScrollView, Dimensions, Text, FlatList, StatusBar } from 'react-native';
 import { Header, Container, Toast, Left, Body, Right, Title, Content, Button, Spinner, Drawer, Icon, H2 } from 'native-base';
 import fire from './config';
 
@@ -11,6 +11,7 @@ import SignInPage from './components/SignInPage/SignInPage';
 import Feed from './components/LandingLayout/LandingLayout';
 import InputPengaduan from './components/InputPengaduan/InputPengaduan';
 import SignUpPage from './components/SignUpPage/SignUpPage';
+import FillProfilePage from './components/FillProfilePage/FillProfilePage';
 
 
 export default class App extends React.Component {
@@ -19,7 +20,7 @@ export default class App extends React.Component {
     signEmailValue: '',
     signPassValue: '',
     signupEmailValue: '',
-    signPassValue: '',
+    signupPassValue: '',
     post: [],
     postOpen: false,
     InputPengaduan: false,
@@ -27,8 +28,15 @@ export default class App extends React.Component {
     spinner: false,
     gotoSignup: false,
     showToast: false,
-    errorLoginMessage: '',
-    toastAnim: new Animated.Value(0)
+    errorLoginSignupMessage: '',
+    toastAnim: new Animated.Value(0),
+    loading: true,
+    fillProfilePage: false,
+    inputNamaProfile: '',
+    inputKelasProfile: '',
+    inputNPMProfile: '',
+    inputJurusanProfile: ''
+
   }
 
   fetching = () => {
@@ -42,8 +50,10 @@ export default class App extends React.Component {
     await Font.loadAsync({
       'Roboto': require('native-base/Fonts/Roboto.ttf'),
       'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
-      ...Ionicons.font,
+      Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf"),
     });
+    this.setState({ loading: false });
+    StatusBar.setHidden(true);
     this.fetching();
     this.authListener();
   };
@@ -78,9 +88,9 @@ export default class App extends React.Component {
       .then()
       .catch((e) => {
         if (e === 'The email address is badly formatted.' || 'The password is invalid or the user does not have a password.') {
-          this.setState({ errorLoginMessage: 'Wrong email or password!' });
+          this.setState({ errorLoginSignupMessage: 'Email atau Password salah!' });
         } else {
-          this.setState({ errorLoginMessage: e });
+          this.setState({ errorLoginSignupMessage: e });
         }
         this.setState({ showToast: true, spinner: false });
         setTimeout(() => this.setState({ showToast: false }), 2000);
@@ -99,14 +109,58 @@ export default class App extends React.Component {
 
   signupEvent = () => {
     const { signupEmailValue, signupPassValue } = this.state;
-    fire.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue);
     this.setState({ spinner: true });
+    fire.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue)
+      .then(() => this.setState({ fillProfilePage: true }))
+      .catch(e => {
+        this.setState({ errorLoginSignupMessage: 'Invalid email or password', spinner: false, showToast: true });
+        setTimeout(() => this.setState({ showToast: false }), 2000);
+      });
   }
-  //END ALL SIGNUP EVENT -----------------------------
+  //END ALL SIGNUP EVENT ---------------------------
 
+  //FILL PROFILE EVENT
+  inputNamaProfileEvent = e => {
+    this.setState({ inputNamaProfile: e });
+  }
+  inputKelasProfileEvent = e => {
+    this.setState({ inputKelasProfile: e });
+  }
+  inputNPMProfileEvent = e => {
+    this.setState({ inputNPMProfile: e });
+  }
+  inputJurusanProfileEvent = e => {
+    this.setState({ inputJurusanProfile: e });
+  }
 
+  saveProfileEvent = () => {
+    const { inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+    const uid = this.state.user ? this.state.user.uid : '';
+    if (inputNamaProfile === '' || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length < 8) {
+      alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
+    } else {
+      fire.database().ref('users/' + uid + '/profile/').set({
+        nama: inputNamaProfile,
+        npm: inputNPMProfile,
+        kelas: inputKelasProfile,
+        jurusan: inputJurusanProfile
+      }).then(() => this.setState({
+        fillProfilePage: false,
+        inputNamaProfile: '',
+        inputKelasProfile: '',
+        inputNPMProfile: '',
+        inputJurusanProfile: '',
+        signupEmailValue: '',
+        signupPassValue: ''
+      }));
+    }
+  };
+  //END FILL PROFILE EVENT---------------------------------
 
   render() {
+    if (this.state.loading) {
+      return <AppLoading />;
+    }
     let toast = (
       <View style={{
         width: '100%',
@@ -116,23 +170,33 @@ export default class App extends React.Component {
         top: 0,
         paddingVertical: 20
       }}>
-        <Text style={{ color: '#fff', textAlign: 'center' }}>{this.state.errorLoginMessage}</Text>
+        <Text style={{ color: '#fff', textAlign: 'center' }}>{this.state.errorLoginSignupMessage}</Text>
       </View>
     );
-    // if (this.state.showToast) {
 
-    // }
     return (
       <Container style={styles.container}>
         <Header style={styles.header}>
-          <Body>
+          <Body style={{ alignItems: 'center' }}>
             <Title style={{ color: '#fff' }}>GLUE</Title>
           </Body>
         </Header>
         {this.state.showToast ? toast : null}
         {this.state.user !== null ? (
           <>
-            <LandingLayout signout={this.signOut} />
+            {this.state.fillProfilePage ? (
+              <FillProfilePage
+                inputNamaProfileEvent={this.inputNamaProfileEvent}
+                inputNamaProfile={this.state.inputNamaProfile}
+                inputNPMProfileEvent={this.inputNPMProfileEvent}
+                inputNPMProfile={this.state.inputNPMProfile}
+                inputKelasProfileEvent={this.inputKelasProfileEvent}
+                inputKelasProfile={this.state.inputKelasProfile}
+                inputJurusanProfileEvent={this.inputJurusanProfileEvent}
+                inputJurusanProfile={this.state.inputJurusanProfile}
+                saveProfileEvent={this.saveProfileEvent}
+              />
+            ) : <LandingLayout signout={this.signOut} />}
           </>
         ) : (
             <>
@@ -182,7 +246,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#6e8272',
   },
   header: {
-    backgroundColor: '#0a78af',
+    backgroundColor: '#640164',
 
   }
 });
