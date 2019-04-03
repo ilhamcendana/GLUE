@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
-import { Font, AppLoading } from 'expo';
+import { Font, AppLoading, ImagePicker, Permissions } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Animated, View, ScrollView, Dimensions, Text, FlatList, StatusBar } from 'react-native';
 import { Header, Container, Toast, Left, Body, Right, Title, Content, Button, Spinner, Drawer, Icon, H2 } from 'native-base';
 import fire from './config';
+
 
 
 //COMPONENTS
@@ -12,6 +13,7 @@ import Feed from './components/LandingLayout/LandingLayout';
 import InputPengaduan from './components/InputPengaduan/InputPengaduan';
 import SignUpPage from './components/SignUpPage/SignUpPage';
 import FillProfilePage from './components/FillProfilePage/FillProfilePage';
+
 
 
 export default class App extends React.Component {
@@ -31,11 +33,12 @@ export default class App extends React.Component {
     errorLoginSignupMessage: '',
     toastAnim: new Animated.Value(0),
     loading: true,
-    fillProfilePage: false,
+    fillProfilePage: true,
     inputNamaProfile: '',
     inputKelasProfile: '',
     inputNPMProfile: '',
-    inputJurusanProfile: ''
+    inputJurusanProfile: '',
+    image: null
 
   }
 
@@ -52,7 +55,7 @@ export default class App extends React.Component {
       'Roboto_medium': require('native-base/Fonts/Roboto_medium.ttf'),
       Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf"),
     });
-    this.setState({ loading: false });
+    this.setState({ loading: false, });
     StatusBar.setHidden(true);
     this.fetching();
     this.authListener();
@@ -134,7 +137,7 @@ export default class App extends React.Component {
   }
 
   saveProfileEvent = () => {
-    const { inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+    const { inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile, image } = this.state;
     const uid = this.state.user ? this.state.user.uid : '';
     if (inputNamaProfile === '' || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length < 8) {
       alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
@@ -145,7 +148,7 @@ export default class App extends React.Component {
         kelas: inputKelasProfile,
         jurusan: inputJurusanProfile
       }).then(() => this.setState({
-        fillProfilePage: false,
+        fillProfilePage: true,
         inputNamaProfile: '',
         inputKelasProfile: '',
         inputNPMProfile: '',
@@ -153,9 +156,36 @@ export default class App extends React.Component {
         signupEmailValue: '',
         signupPassValue: ''
       }));
+      fire.storage().ref('users/' + uid + '/profile/').put(image)
+        .then()
+        .catch(() => console.log(image))
     }
   };
   //END FILL PROFILE EVENT---------------------------------
+
+  // IMAGE FROM PHONE EVENT
+  _pickImage = async () => {
+    await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    let result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      aspect: [4, 4],
+    });
+    if (!result.cancelled) {
+      this.setState({ image: result.uri });
+    }
+    console.log(this.state.image);
+  }
+
+  _takeImage = async () => {
+    await Permissions.askAsync(Permissions.CAMERA);
+    let resultCamera = await ImagePicker.launchCameraAsync({
+      allowsEditing: false
+    });
+    if (!resultCamera.cancelled) {
+      this.setState({ image: resultCamera.uri });
+    };
+  }
+  //END IMAGE FROM PHONE EVENT------------------------------
 
   render() {
     if (this.state.loading) {
@@ -195,6 +225,9 @@ export default class App extends React.Component {
                 inputJurusanProfileEvent={this.inputJurusanProfileEvent}
                 inputJurusanProfile={this.state.inputJurusanProfile}
                 saveProfileEvent={this.saveProfileEvent}
+                _pickImage={this._pickImage}
+                image={this.state.image}
+                _takeImage={this._takeImage}
               />
             ) : <LandingLayout signout={this.signOut} />}
           </>

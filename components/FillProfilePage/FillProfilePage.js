@@ -12,15 +12,17 @@ import {
     Spinner,
     H1,
     Picker,
-    Icon
+    Icon,
+    Thumbnail
 } from 'native-base';
 
 export default FillProfilePage = (props) => {
     const jurusan = ['Manajemen Informatika', 'Teknik Komputer', 'Manajemen Keuangan', 'Manajemen Pemasaran', 'Akuntansi', 'Teknik Informatika', 'Teknik Industri', 'Teknik Mesin', 'Teknik Elektro', 'Teknik Sipil', 'Arsitektur', 'Sistem Informasi', 'Sistem Komputer', 'Manajemen', 'Akuntansi D3', 'Psikologi', 'Sastra Inggris', 'Manajemen Sistem Informasi', 'Magister Manajemen', 'Teknik Elektro', 'Teknologi Informasi'];
+    const uri = "https://facebook.github.io/react-native/docs/assets/favicon.png";
     return (
         <Container style={{
             flex: 1,
-            width: '100%'
+            width: '100%',
         }}>
             <Content style={{
                 flex: 1,
@@ -29,6 +31,25 @@ export default FillProfilePage = (props) => {
                     textAlign: 'center',
                     marginTop: 40
                 }}>Lengkapi Profile Anda</H1>
+
+                <View style={{
+                    width: '100%',
+                    alignItems: 'center',
+                    marginTop: 30,
+                    justifyContent: 'center'
+                }}>
+                    <Thumbnail source={props.image ? { uri: props.image } : require('../../assets/ProfileIcon.png')} style={{ marginTop: 10, width: 150, height: 150 }} />
+                    <Text style={{ marginVertical: 5 }}>Foto Profil</Text>
+                    <View>
+                        <Button onPress={props._takeImage} style={{ width: 200, marginVertical: 20, backgroundColor: '#640164' }}>
+                            <Text style={{ textAlign: 'center' }}>Take a photo</Text>
+                        </Button>
+                        <Button onPress={props._pickImage} style={{ width: 200, backgroundColor: '#640164' }}>
+                            <Text style={{ textAlign: 'center' }}>Choose from library</Text>
+                        </Button>
+                    </View>
+
+                </View>
 
                 <Form style={{
                     padding: 20,
