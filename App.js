@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import { Font, AppLoading, ImagePicker, Permissions } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Animated, View, ScrollView, Dimensions, Text, FlatList, StatusBar } from 'react-native';
+import { StyleSheet, Animated, View, ScrollView, Alert, Dimensions, Text, FlatList, StatusBar } from 'react-native';
 import { Header, Container, Toast, Left, Body, Right, Title, Content, Button, Spinner, Drawer, Icon, H2 } from 'native-base';
 import fire from './config';
-
+import { createStackNavigator } from 'react-navigation';
 
 
 //COMPONENTS
@@ -13,7 +13,9 @@ import Feed from './components/LandingLayout/LandingLayout';
 import InputPengaduan from './components/InputPengaduan/InputPengaduan';
 import SignUpPage from './components/SignUpPage/SignUpPage';
 import FillProfilePage from './components/FillProfilePage/FillProfilePage';
-
+import HeaderWei from './components/HeaderWei/HeaderWei';
+import Info from './components/Info/Info';
+import LandingLayout from './components/LandingLayout/LandingLayout';
 
 
 export default class App extends React.Component {
@@ -31,22 +33,28 @@ export default class App extends React.Component {
     gotoSignup: false,
     showToast: false,
     errorLoginSignupMessage: '',
-    toastAnim: new Animated.Value(0),
     loading: true,
-    fillProfilePage: true,
+    fillProfilePage: false,
     inputNamaProfile: '',
     inputKelasProfile: '',
     inputNPMProfile: '',
     inputJurusanProfile: '',
-    image: null
+    image: null,
+    profilePictCondition: 'Lengkapi profil anda',
+    indexLanding: 1,
+    infoClicked: new Animated.Value(-1000),
+    cancelOnFill: false,
+    namaUser: '',
+    kelasUser: '',
+    npmUser: '',
+    jurusanUser: ''
 
   }
 
-  fetching = () => {
-    // const getData = fire.database().ref('data/');
-    // getData.on('value', (snapshot) => {
-    //   console.log(snapshot.val().aduan);
-    // });
+  //WARNING! To be deprecated in React v17. Use componentDidMount instead.
+  componentWillMount() {
+    StatusBar.setHidden(true);
+    this.authListener();
   }
 
   async componentDidMount() {
@@ -56,20 +64,33 @@ export default class App extends React.Component {
       Ionicons: require("@expo/vector-icons/fonts/Ionicons.ttf"),
     });
     this.setState({ loading: false, });
-    StatusBar.setHidden(true);
-    this.fetching();
-    this.authListener();
+    StatusBar.setHidden(false);
+
   };
 
   authListener = () => {
     fire.auth().onAuthStateChanged((user) => {
       if (user) {
         this.setState({ user });
+        this.fetchingProfileData();
       } else {
-        this.setState({ user: null, signEmailValue: '', signPassValue: '' });
+        this.setState({ user: null, signEmailValue: '', signPassValue: '', spinner: false });
       }
     })
   };
+
+  fetchingProfileData = () => {
+    const uid = this.state.user ? this.state.user.uid : '';
+    const getData = fire.database().ref('users/' + uid + '/profile/');
+    getData.on('value', (snapshot) => {
+      this.setState({
+        namaUser: snapshot.val().nama,
+        npmUser: snapshot.val().npm,
+        kelasUser: snapshot.val().kelas,
+        jurusanUser: snapshot.val().jurusan
+      })
+    });
+  }
 
   signOut = () => {
     fire.auth().signOut().then(() => this.setState({ spinner: false }));
@@ -88,7 +109,15 @@ export default class App extends React.Component {
     const { signEmailValue, signPassValue } = this.state;
     this.setState({ spinner: true });
     fire.auth().signInWithEmailAndPassword(signEmailValue, signPassValue)
-      .then()
+      .then(() => {
+        if (fire.auth().currentUser.emailVerified) {
+          alert('welcome')
+        } else {
+          this.setState({ spinner: false });
+          alert('verifikasi dulu');
+        }
+      })
+
       .catch((e) => {
         if (e === 'The email address is badly formatted.' || 'The password is invalid or the user does not have a password.') {
           this.setState({ errorLoginSignupMessage: 'Email atau Password salah!' });
@@ -111,14 +140,45 @@ export default class App extends React.Component {
   };
 
   signupEvent = () => {
-    const { signupEmailValue, signupPassValue } = this.state;
+    const { signupEmailValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
     this.setState({ spinner: true });
-    fire.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue)
-      .then(() => this.setState({ fillProfilePage: true }))
-      .catch(e => {
-        this.setState({ errorLoginSignupMessage: 'Invalid email or password', spinner: false, showToast: true });
-        setTimeout(() => this.setState({ showToast: false }), 2000);
-      });
+    if (inputNamaProfile === '' || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length < 8) {
+      alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
+      this.setState({ spinner: false });
+    } else {
+      fire.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue)
+        .then(() => {
+
+          fire.auth().currentUser.sendEmailVerification().then(function () {
+            alert('an email verification has been sent to your email address');
+
+          }).catch(function (error) {
+            alert(error);
+            this.setState({ errorLoginSignupMessage: error, spinner: false, showToast: true });
+            setTimeout(() => this.setState({ showToast: false }), 2000);
+          });
+
+
+          fire.database().ref('users/' + fire.auth().currentUser.uid + '/profile/').set({
+            email: signupEmailValue,
+            nama: inputNamaProfile,
+            npm: inputNPMProfile,
+            kelas: inputKelasProfile,
+            jurusan: inputJurusanProfile
+          }).then(() => this.setState({
+            inputNamaProfile: '',
+            inputKelasProfile: '',
+            inputNPMProfile: '',
+            inputJurusanProfile: '',
+            signupEmailValue: '',
+            signupPassValue: '',
+            spinner: false,
+            gotoSignup: false
+          }));
+
+
+        })
+    }
   }
   //END ALL SIGNUP EVENT ---------------------------
 
@@ -137,57 +197,79 @@ export default class App extends React.Component {
   }
 
   saveProfileEvent = () => {
-    const { inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile, image } = this.state;
-    const uid = this.state.user ? this.state.user.uid : '';
-    if (inputNamaProfile === '' || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length < 8) {
-      alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
-    } else {
-      fire.database().ref('users/' + uid + '/profile/').set({
-        nama: inputNamaProfile,
-        npm: inputNPMProfile,
-        kelas: inputKelasProfile,
-        jurusan: inputJurusanProfile
-      }).then(() => this.setState({
-        fillProfilePage: true,
-        inputNamaProfile: '',
-        inputKelasProfile: '',
-        inputNPMProfile: '',
-        inputJurusanProfile: '',
-        signupEmailValue: '',
-        signupPassValue: ''
-      }));
-      fire.storage().ref('users/' + uid + '/profile/').put(image)
-        .then()
-        .catch(() => console.log(image))
-    }
+    // const { inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile, image } = this.state;
+
+    // this.setState({ spinner: true });
+    //  else {
+
+    // }
   };
   //END FILL PROFILE EVENT---------------------------------
 
-  // IMAGE FROM PHONE EVENT
+  // IMAGE FROM PHONE EVENT FILLPROFILE
   _pickImage = async () => {
+    const uid = this.state.user ? this.state.user.uid : '';
     await Permissions.askAsync(Permissions.CAMERA_ROLL);
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      aspect: [4, 4],
+      aspect: [4, 3],
     });
     if (!result.cancelled) {
-      this.setState({ image: result.uri });
+      this.setState({ image: result.uri, profilePictCondition: 'Uploading...' });
+      const response = await fetch(result.uri);
+      const blob = await response.blob();
+      let ref = fire.storage().ref('users/' + uid + '/profilePict/').child("profilePict");
+      return ref.put(blob).then(() => {
+        this.setState({ profilePictCondition: 'Uploaded!!!' });
+      }).catch((error) => {
+        this.setState({ profilePictCondition: 'Upload error' });
+      });
     }
-    console.log(this.state.image);
   }
 
   _takeImage = async () => {
+    const uid = this.state.user ? this.state.user.uid : '';
     await Permissions.askAsync(Permissions.CAMERA);
     let resultCamera = await ImagePicker.launchCameraAsync({
       allowsEditing: false
     });
     if (!resultCamera.cancelled) {
-      this.setState({ image: resultCamera.uri });
+      this.setState({ image: resultCamera.uri, profilePictCondition: 'Uploading...' });
+      const response = await fetch(resultCamera.uri);
+      const blob = await response.blob();
+      let ref = fire.storage().ref('users/' + uid + '/profilePict/').child("profilePict");
+      return ref.put(blob).then(() => {
+        this.setState({ profilePictCondition: 'Uploaded!!!' });
+      }).catch((error) => {
+        this.setState({ profilePictCondition: 'Upload error' });
+      });
     };
-  }
-  //END IMAGE FROM PHONE EVENT------------------------------
+  };
+
+  //END IMAGE FROM PHONE EVENT FILLPROFILE------------------------------
+
+  infoClicked = () => {
+    Animated.timing(this.state.infoClicked, {
+      toValue: -1000,
+      duration: 400
+    }).start();
+  };
+
+  infoClickedOpen = () => {
+    Animated.timing(this.state.infoClicked, {
+      toValue: 0,
+      duration: 400
+    }).start()
+
+  };
+
 
   render() {
+    const user = this.state.user ? this.state.user : null;
+    // const AppStackNavigator = createStackNavigator({
+    //   Home:LandingLayout
+    // });
+
     if (this.state.loading) {
       return <AppLoading />;
     }
@@ -206,32 +288,15 @@ export default class App extends React.Component {
 
     return (
       <Container style={styles.container}>
-        <Header style={styles.header}>
-          <Body style={{ alignItems: 'center' }}>
-            <Title style={{ color: '#fff' }}>GLUE</Title>
-          </Body>
-        </Header>
+        <Info infoClicked={() => this.infoClicked()} translateInfo={this.state.infoClicked} />
+        <HeaderWei
+          infoClickedOpen={() => this.infoClickedOpen()}
+          fillProfilePage={this.state.fillProfilePage}
+        />
+
         {this.state.showToast ? toast : null}
-        {this.state.user !== null ? (
-          <>
-            {this.state.fillProfilePage ? (
-              <FillProfilePage
-                inputNamaProfileEvent={this.inputNamaProfileEvent}
-                inputNamaProfile={this.state.inputNamaProfile}
-                inputNPMProfileEvent={this.inputNPMProfileEvent}
-                inputNPMProfile={this.state.inputNPMProfile}
-                inputKelasProfileEvent={this.inputKelasProfileEvent}
-                inputKelasProfile={this.state.inputKelasProfile}
-                inputJurusanProfileEvent={this.inputJurusanProfileEvent}
-                inputJurusanProfile={this.state.inputJurusanProfile}
-                saveProfileEvent={this.saveProfileEvent}
-                _pickImage={this._pickImage}
-                image={this.state.image}
-                _takeImage={this._takeImage}
-              />
-            ) : <LandingLayout signout={this.signOut} />}
-          </>
-        ) : (
+        {this.state.user === null ?
+          (
             <>
               {!this.state.gotoSignup ? (
                 <SignInPage
@@ -252,9 +317,33 @@ export default class App extends React.Component {
                     signupPassValue={this.state.signupPassValue}
                     spinner={this.state.spinner}
                     gotoSignup={() => !this.state.gotoSignup ? this.setState({ gotoSignup: true }) : this.setState({ gotoSignup: false })}
+                    inputNamaProfileEvent={this.inputNamaProfileEvent}
+                    inputNamaProfile={this.state.inputNamaProfile}
+                    inputNPMProfileEvent={this.inputNPMProfileEvent}
+                    inputNPMProfile={this.state.inputNPMProfile}
+                    inputKelasProfileEvent={this.inputKelasProfileEvent}
+                    inputKelasProfile={this.state.inputKelasProfile}
+                    inputJurusanProfileEvent={this.inputJurusanProfileEvent}
+                    inputJurusanProfile={this.state.inputJurusanProfile}
+                    _takeImage={this._takeImage}
+                    _pickImage={this._pickImage}
+                    image={this.state.image}
                   />
                 )}
             </>
+          ) : (
+            <LandingLayout
+              signout={this.signOut}
+              indexLanding={this.state.indexLanding}
+              indexChange={(index) => this.setState({ indexLanding: index })}
+              openEdit={() => this.setState({ fillProfilePage: true, cancelOnFill: true })}
+              uid={this.state.user ? this.state.user.uid : ''}
+              emailVerified={this.state.user ? this.state.user.emailVerified : ''}
+              namaUser={this.state.namaUser}
+              npmUser={this.state.npmUser}
+              kelasUser={this.state.kelasUser}
+              jurusanUser={this.state.jurusanUser}
+            />
           )}
 
 
@@ -272,15 +361,10 @@ let screenWidth = Dimensions.get('window').width;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'lightblue'
   },
   posts: {
     width: '100%',
     backgroundColor: '#6e8272',
   },
-  header: {
-    backgroundColor: '#640164',
-
-  }
 });
 

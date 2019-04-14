@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, KeyboardAvoidingView } from 'react-native';
 import {
     Container,
     Content,
@@ -19,65 +19,68 @@ export default SignInPage = (props) => {
             flex: 1,
             width: '100%'
         }}>
-            <Content style={{
-                flex: 1,
-            }}>
-                <H1 style={{
-                    textAlign: 'center',
-                    marginTop: 40
-                }}>Sign in</H1>
 
-                {props.spinner ? (
-                    <View style={{
-                        position: 'absolute',
-                        flex: 1,
-                        width: '100%',
-                        justifyContent: 'center',
-                        zIndex: 100
-                    }}>
-                        <Spinner color='blue' />
-                    </View>
-                ) : null}
-
-                <Form style={{
-                    padding: 20,
-                    flex: 1,
-                    justifyContent: 'center'
+            {props.spinner ? (
+                <View style={{
+                    position: 'absolute',
+                    height: '100%',
+                    width: '100%',
+                    top: 40
                 }}>
-                    <Item floatingLabel>
-                        <Label>Email</Label>
-                        <Input
-                            autoCapitalize='none'
-                            keyboardType='email-address'
-                            returnKeyType='done'
-                            onChangeText={props.inputEmailValChange}
-                            value={props.signEmailValue} />
-                    </Item>
-                    <Item floatingLabel last>
-                        <Label>Password</Label>
-                        <Input
-                            secureTextEntry={true}
-                            returnKeyType='go'
-                            onChangeText={props.inputPassValChange}
-                            value={props.signPassValue}
-                            autoCapitalize='none' />
-                    </Item>
-                    <Button block onPress={props.loginEvent} style={{
-                        marginTop: 40,
-                        backgroundColor: '#640164'
-                    }}>
-                        <Text>Sign in</Text>
-                    </Button>
-                    <View style={{
-                        marginTop: 20,
-                        alignItems: 'center',
+                    <Spinner color='#660066' />
+                </View>
+            ) : null}
+
+            <View style={{ flex: 1, justifyContent: 'space-evenly' }}>
+                <Text style={{
+                    textAlign: 'center',
+                    fontWeight: '500',
+                    fontSize: 50,
+
+                }}>Log in</Text>
+
+                <KeyboardAvoidingView behavior="padding" enabled>
+                    <Form style={{
+                        padding: 20,
                         justifyContent: 'center'
                     }}>
-                        <Text>or</Text>
-                        <Button transparent onPress={props.gotoSignup} block><Text style={{ color: '#640164' }}>Sign up</Text></Button>
-                    </View>
-                </Form>
-            </Content>
+                        <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                            <Label>Email</Label>
+                            <Input
+                                autoCapitalize='none'
+                                keyboardType='email-address'
+                                returnKeyType='done'
+                                onChangeText={props.inputEmailValChange}
+                                value={props.signEmailValue} />
+                        </Item>
+                        <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                            <Label>Password</Label>
+                            <Input
+                                secureTextEntry={true}
+                                returnKeyType='go'
+                                onChangeText={props.inputPassValChange}
+                                value={props.signPassValue}
+                                autoCapitalize='none' />
+                        </Item>
+                        <Button rounded onPress={props.loginEvent} style={{
+                            marginTop: 40,
+                            backgroundColor: '#640164',
+                            alignSelf: 'center',
+                            width: 150,
+                            display: 'flex',
+                            justifyContent: 'center'
+                        }}>
+                            <Text>Sign in</Text>
+                        </Button>
+                        <Text style={{ textAlign: 'center', marginVertical: 15 }}>or</Text>
+                        <Button
+                            rounded
+                            style={{ borderColor: '#660066', width: 150, borderWidth: 1, display: 'flex', justifyContent: 'center', backgroundColor: 'none', alignSelf: 'center' }}
+                            onPress={props.gotoSignup} ><Text style={{ color: '#640164' }}>Sign up</Text></Button>
+                    </Form>
+                </KeyboardAvoidingView>
+
+            </View>
         </Container>
     );
 }
