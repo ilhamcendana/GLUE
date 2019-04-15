@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Form, Textarea, Input, Item, Content, Icon, Button, Text, Toast } from 'native-base';
 import { Camera, Permissions } from 'expo';
-import axios from 'axios';
 
 export default class InputPengaduan extends Component {
     state = {

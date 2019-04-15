@@ -19,12 +19,32 @@ export default class LandingLayout extends Component {
         let screenWidth = Dimensions.get('window').width;
         let verifonfeed = (
             <View style={{ width: screenWidth, flex: 1, justifyContent: 'center' }}>
-                <Text style={{ fontSize: 80, textAlign: 'center' }}>Verification your email to open feed</Text>
+                <Text style={{ fontSize: 50, textAlign: 'center' }}>Verification your email to open feed</Text>
+                <Button rounded style={{ alignSelf: 'center', marginTop: 20 }} onPress={() => {
+                    fire.auth().currentUser.sendEmailVerification().then(function () {
+                        alert('an email verification has been sent to your email address');
+
+                    }).catch(function (error) {
+                        alert(error);
+                    });
+                }}>
+                    <Text>Resend Email Verification</Text>
+                </Button>
             </View>
         );
         let verifontrends = (
             <View style={{ width: screenWidth, flex: 1, justifyContent: 'center' }}>
-                <Text style={{ fontSize: 80, textAlign: 'center' }}>Verification your email to open trends</Text>
+                <Text style={{ fontSize: 50, textAlign: 'center' }}>Verification your email to open trends</Text>
+                <Button rounded style={{ alignSelf: 'center', marginTop: 20 }} onPress={() => {
+                    fire.auth().currentUser.sendEmailVerification().then(function () {
+                        alert('an email verification has been sent to your email address');
+
+                    }).catch(function (error) {
+                        alert(error);
+                    });
+                }}>
+                    <Text>Resend Email Verification</Text>
+                </Button>
             </View>
         );
         return (
@@ -38,6 +58,7 @@ export default class LandingLayout extends Component {
                     npmUser={this.props.npmUser}
                     kelasUser={this.props.kelasUser}
                     jurusanUser={this.props.jurusanUser}
+                    profilPictUrlFetch={this.props.profilPictUrlFetch}
                 />
 
                 {this.props.emailVerified ? <Feed PickImagePost={this.props.PickImagePost} uid={this.props.uid} /> : verifonfeed}

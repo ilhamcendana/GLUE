@@ -30,7 +30,7 @@ export default ProfilePage = (props) => {
                             <Text style={{ fontSize: 15, fontWeight: '100', textAlign: 'center', color: '#fff' }}>{props.jurusanUser}</Text>
                         </View>
                         <View style={{ width: '50%', alignItems: 'center' }}>
-                            <Thumbnail source={require('../../assets/ProfileIcon.png')} large />
+                            <Thumbnail source={props.profilPictUrlFetch !== '' ? { uri: props.profilPictUrlFetch } : require('../../assets/ProfileIcon.png')} large />
                         </View>
                         <View style={{ width: '25%', alignItems: 'center' }}>
                             <Button rounded transparent style={{ alignSelf: 'center' }} onPress={props.openEdit}>

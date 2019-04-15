@@ -38,6 +38,7 @@ export default class App extends React.Component {
     inputKelasProfile: '',
     inputNPMProfile: '',
     inputJurusanProfile: '',
+    profilPictUrl: '',
     image: null,
     profilePictCondition: 'Lengkapi profil anda',
     indexLanding: 1,
@@ -46,7 +47,8 @@ export default class App extends React.Component {
     namaUser: '',
     kelasUser: '',
     npmUser: '',
-    jurusanUser: ''
+    jurusanUser: '',
+    profilPictUrlFetch: ''
 
   }
 
@@ -64,7 +66,6 @@ export default class App extends React.Component {
     });
     this.setState({ loading: false, });
     StatusBar.setHidden(false);
-    await Permissions.askAsync(Permissions.CAMERA);
   };
 
   authListener = () => {
@@ -86,7 +87,8 @@ export default class App extends React.Component {
         namaUser: snapshot.val().nama,
         npmUser: snapshot.val().npm,
         kelasUser: snapshot.val().kelas,
-        jurusanUser: snapshot.val().jurusan
+        jurusanUser: snapshot.val().jurusan,
+        profilPictUrlFetch: snapshot.val().profilPictUrl
       })
     });
   }
@@ -139,7 +141,7 @@ export default class App extends React.Component {
   };
 
   signupEvent = () => {
-    const { signupEmailValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+    const { profilPictUrl, signupEmailValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
     this.setState({ spinner: true });
     if (inputNamaProfile === '' || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length < 8) {
       alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
@@ -158,12 +160,15 @@ export default class App extends React.Component {
           });
 
 
+
           fire.database().ref('users/' + fire.auth().currentUser.uid + '/profile/').set({
             email: signupEmailValue,
             nama: inputNamaProfile,
             npm: inputNPMProfile,
             kelas: inputKelasProfile,
-            jurusan: inputJurusanProfile
+            jurusan: inputJurusanProfile,
+            profilPictUrl: profilPictUrl
+
           }).then(() => this.setState({
             inputNamaProfile: '',
             inputKelasProfile: '',
@@ -207,50 +212,63 @@ export default class App extends React.Component {
 
   // IMAGE FROM PHONE EVENT SIGNUP
   _pickImage = async () => {
-    const uid = this.state.user ? this.state.user.uid : '';
+    await Permissions.askAsync(Permissions.CAMERA_ROLL);
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      aspect: [4, 3]
+      aspect: [3, 3]
     });
 
     if (!result.cancelled) {
       this.setState({ image: result.uri });
-      this.uploadProfilPict(result.uri, 'test.jpg')
-        .then(() => {
-          alert('success');
-        })
-        .catch((error) => {
-          alert(error);
-        })
+      this.uploadProfilPict(result.uri)
+        .then(() => alert('success'))
+        .catch((err) => console.log(err));
     }
   }
 
+
   _takeImage = async () => {
-    const uid = this.state.user ? this.state.user.uid : '';
+    await Permissions.askAsync(Permissions.CAMERA);
     let result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
-      aspect: [4, 3]
+      aspect: [3, 3]
     });
     if (!result.cancelled) {
-      this.setState({ image: result.uri, profilePictCondition: 'Uploading...' });
+      this.setState({ image: result.uri });
       this.uploadProfilPict(result.uri)
-        .then(() => {
-          alert('success');
-        })
-        .catch((error) => {
-          alert(error);
-        })
+        .then(() => alert('success'))
+        .catch((err) => console.log(err));
     };
   };
 
-  uploadProfilPict = async (uri, name) => {
-    const response = await fetch(uri);
-    const blop = await response.blob();
+  uploadProfilPict = async (uri) => {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
 
-    let ref = fire.storage().ref().child('images/' + name);
-    return ref.put(blop);
+    const date = new Date();
+    const ref = fire
+      .storage()
+      .ref('PROFILE-PICTURE/' + 'PP_' + date.getDay() + '-' + date.getMonth() + '-' + date.getFullYear() + '::' + date.getMilliseconds());
+    const snapshot = await ref.put(blob);
+
+    // We're done with the blob, close and release it
+    blob.close();
+    const profilPictUrl = await snapshot.ref.getDownloadURL();
+    return this.setState({ profilPictUrl });
   }
-
   //END IMAGE FROM PHONE EVENT SIGNUP------------------------------
 
   infoClicked = () => {
@@ -271,6 +289,7 @@ export default class App extends React.Component {
 
   render() {
     const user = this.state.user ? this.state.user : null;
+    console.log(this.state.profilPictUrl);
     // const AppStackNavigator = createStackNavigator({
     //   Home:LandingLayout
     // });
@@ -348,6 +367,7 @@ export default class App extends React.Component {
               npmUser={this.state.npmUser}
               kelasUser={this.state.kelasUser}
               jurusanUser={this.state.jurusanUser}
+              profilPictUrlFetch={this.state.profilPictUrlFetch}
             />
           )}
 
