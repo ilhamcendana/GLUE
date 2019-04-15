@@ -17,7 +17,6 @@ import HeaderWei from './components/HeaderWei/HeaderWei';
 import Info from './components/Info/Info';
 import LandingLayout from './components/LandingLayout/LandingLayout';
 
-
 export default class App extends React.Component {
   state = {
     user: {},
@@ -65,7 +64,7 @@ export default class App extends React.Component {
     });
     this.setState({ loading: false, });
     StatusBar.setHidden(false);
-
+    await Permissions.askAsync(Permissions.CAMERA);
   };
 
   authListener = () => {
@@ -206,47 +205,53 @@ export default class App extends React.Component {
   };
   //END FILL PROFILE EVENT---------------------------------
 
-  // IMAGE FROM PHONE EVENT FILLPROFILE
+  // IMAGE FROM PHONE EVENT SIGNUP
   _pickImage = async () => {
     const uid = this.state.user ? this.state.user.uid : '';
-    await Permissions.askAsync(Permissions.CAMERA_ROLL);
     let result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [4, 3]
     });
+
     if (!result.cancelled) {
-      this.setState({ image: result.uri, profilePictCondition: 'Uploading...' });
-      const response = await fetch(result.uri);
-      const blob = await response.blob();
-      let ref = fire.storage().ref('users/' + uid + '/profilePict/').child("profilePict");
-      return ref.put(blob).then(() => {
-        this.setState({ profilePictCondition: 'Uploaded!!!' });
-      }).catch((error) => {
-        this.setState({ profilePictCondition: 'Upload error' });
-      });
+      this.setState({ image: result.uri });
+      this.uploadProfilPict(result.uri, 'test.jpg')
+        .then(() => {
+          alert('success');
+        })
+        .catch((error) => {
+          alert(error);
+        })
     }
   }
 
   _takeImage = async () => {
     const uid = this.state.user ? this.state.user.uid : '';
-    await Permissions.askAsync(Permissions.CAMERA);
-    let resultCamera = await ImagePicker.launchCameraAsync({
-      allowsEditing: false
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3]
     });
-    if (!resultCamera.cancelled) {
-      this.setState({ image: resultCamera.uri, profilePictCondition: 'Uploading...' });
-      const response = await fetch(resultCamera.uri);
-      const blob = await response.blob();
-      let ref = fire.storage().ref('users/' + uid + '/profilePict/').child("profilePict");
-      return ref.put(blob).then(() => {
-        this.setState({ profilePictCondition: 'Uploaded!!!' });
-      }).catch((error) => {
-        this.setState({ profilePictCondition: 'Upload error' });
-      });
+    if (!result.cancelled) {
+      this.setState({ image: result.uri, profilePictCondition: 'Uploading...' });
+      this.uploadProfilPict(result.uri)
+        .then(() => {
+          alert('success');
+        })
+        .catch((error) => {
+          alert(error);
+        })
     };
   };
 
-  //END IMAGE FROM PHONE EVENT FILLPROFILE------------------------------
+  uploadProfilPict = async (uri, name) => {
+    const response = await fetch(uri);
+    const blop = await response.blob();
+
+    let ref = fire.storage().ref().child('images/' + name);
+    return ref.put(blop);
+  }
+
+  //END IMAGE FROM PHONE EVENT SIGNUP------------------------------
 
   infoClicked = () => {
     Animated.timing(this.state.infoClicked, {
