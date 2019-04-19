@@ -25,7 +25,6 @@ export default class InputPengaduan extends Component {
         };
         axios.post('https://forumpengaduan.firebaseio.com/data.json', aduan);
         this.setState({ input: '', showSuccess: true });
-        setTimeout(() => this.setState({ showSuccess: false }), 1000);
     }
     render() {
         const success = this.state.showSuccess ? (

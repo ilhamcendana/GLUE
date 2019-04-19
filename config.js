@@ -1,15 +1,10 @@
-import firebase from 'firebase';
-import 'firebase/database';
-import 'firebase/auth';
-import 'firebase/storage';
-
-var config = {
-    apiKey: "AIzaSyD5G90qLMlefr8JpU9hLLXIEuK76qq4Pz4",
-    authDomain: "forumpengaduan.firebaseapp.com",
-    databaseURL: "https://forumpengaduan.firebaseio.com",
-    projectId: "forumpengaduan",
-    storageBucket: "forumpengaduan.appspot.com",
-    messagingSenderId: "227703932306"
-};
-const fire = firebase.initializeApp(config);
-export default fire;
+export default {
+    FirebaseConfig: {
+        apiKey: "AIzaSyD5G90qLMlefr8JpU9hLLXIEuK76qq4Pz4",
+        authDomain: "forumpengaduan.firebaseapp.com",
+        databaseURL: "https://forumpengaduan.firebaseio.com",
+        projectId: "forumpengaduan",
+        storageBucket: "forumpengaduan.appspot.com",
+        messagingSenderId: "227703932306"
+    }
+}

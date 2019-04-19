@@ -4,7 +4,7 @@ import { Card, CardItem, Left, Body, Right, Text, Button, Icon, Thumbnail, Conte
 
 export default TabProfilPost = (props) => {
     return (
-        <Content>
+        <Content padder>
             <Card style={{ flex: 0 }}>
                 <CardItem>
                     <Left>

@@ -6,16 +6,17 @@ import { Constants } from 'expo';
 
 export default HeaderWei = (props) => {
     return (
-        <Header style={styles.header} >
+        <Header>
             <Left style={{ flex: 1 }}>
+                <Button transparent onPress={props.openDrawer}>
+                    <Icon name='menu' type='Feather' />
+                </Button>
             </Left>
-            <Body style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ color: '#fff', textAlign: 'center', fontWeight: '100', marginTop: Constants.statusBarHeight }}>GLU!</Text>
-            </Body>
+            <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>GLUE</Text></Body>
             <Right style={{ flex: 1 }}>
-                {props.fillProfilePage ? null : <Button transparent onPress={props.infoClickedOpen}>
-                    <Icon type='Feather' name='info' style={{ color: '#fff', marginTop: Constants.statusBarHeight }} />
-                </Button>}
+                <Button transparent>
+                    <Icon type='Feather' name='more-horizontal' />
+                </Button>
             </Right>
         </Header>
     );

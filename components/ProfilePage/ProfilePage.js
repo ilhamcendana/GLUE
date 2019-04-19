@@ -1,85 +1,144 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { View, Dimensions, ScrollView } from 'react-native';
-import { Thumbnail, Text, Button, Tab, Tabs, TabHeading, Icon } from 'native-base';
+import { Thumbnail, Text, Button, Tab, Tabs, TabHeading, Icon, Content, Header, Container, Left, Body, Right } from 'native-base';
+import * as firebase from 'firebase';
+
 import TabProfilPost from '../TabProfilPost/TabProfilPost';
-import TabNotification from '../TabNotification/TabNotification';
-import fire from '../../config.js';
+import Swiper from 'react-native-swiper';
 
-export default ProfilePage = (props) => {
-    let screenWidth = Dimensions.get('window').width;
-    return (
-        <ScrollView>
-            <View style={{
-                flex: 1,
-                width: screenWidth,
-                alignItems: 'center'
-            }}>
-                <View style={{
-                    width: screenWidth,
-                    height: 220,
-                    backgroundColor: '#606',
-                    paddingTop: 15
-                }}>
-                    <View style={{
-                        width: screenWidth,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                    }}>
-                        <View style={{ width: '25%' }}>
-                            <Text style={{ fontSize: 15, fontWeight: '100', textAlign: 'center', color: '#fff' }}>{props.jurusanUser}</Text>
-                        </View>
-                        <View style={{ width: '50%', alignItems: 'center' }}>
-                            <Thumbnail source={props.profilPictUrlFetch !== '' ? { uri: props.profilPictUrlFetch } : require('../../assets/ProfileIcon.png')} large />
-                        </View>
-                        <View style={{ width: '25%', alignItems: 'center' }}>
-                            <Button rounded transparent style={{ alignSelf: 'center' }} onPress={props.openEdit}>
-                                <Icon style={{ color: '#fff', fontWeight: 'bold' }} type='Feather' name='edit' />
-                            </Button>
-                        </View>
-                    </View>
 
-                    <View style={{
-                        width: screenWidth,
-                        alignItems: 'center',
-                    }}>
-                        <Text style={{ color: '#fff', fontWeight: '500', fontSize: 18, marginVertical: 10, textTransform: 'uppercase' }}>{props.namaUser}</Text>
+
+
+
+class ProfilePage extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            swiperHeaderTitle: 'Profile',
+            namaUser: '',
+            kelasUser: '',
+            npmUser: '',
+            jurusanUser: '',
+            profilPictUrl: ''
+        }
+    }
+
+    static navigationOptions = {
+        header: null
+    }
+
+    componentWillMount() {
+        firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile').on('value', (snapshot) => {
+            this.setState({
+                namaUser: snapshot.val().nama,
+                kelasUser: snapshot.val().kelas,
+                npmUser: snapshot.val().npm,
+                jurusanUser: snapshot.val().jurusan,
+                profilPictUrl: snapshot.val().profilPictUrl
+            });
+        });
+    }
+
+    render() {
+        let screenWidth = Dimensions.get('window').width;
+        return (
+            <Container style={{ flex: 1, width: screenWidth }}>
+                <Header style={{ backgroundColor: '#598c5f' }}>
+                    <Left style={{ flex: 1 }}>
+                        <Button transparent onPress={() => this.props.navigation.openDrawer()}>
+                            <Icon name='menu' type='Feather' />
+                        </Button>
+                    </Left>
+                    <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>{this.state.swiperHeaderTitle}</Text></Body>
+                    <Right style={{ flex: 1 }}>
+                        <Button transparent>
+                            <Icon type='Feather' name='more-horizontal' />
+                        </Button>
+                    </Right>
+                </Header>
+                <Swiper loop={false} showsPagination={false} index={0} bounces={true}
+                    onIndexChanged={(e) => e === 0 ? this.setState({ swiperHeaderTitle: 'Profile' }) : this.setState({ swiperHeaderTitle: 'Notification' })}>
+                    <Content>
                         <View style={{
-                            width: '50%',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between'
+                            flex: 1,
+                            width: screenWidth,
+                            alignItems: 'center'
                         }}>
-                            <Text style={{ fontSize: 13, color: '#fff' }}>{props.kelasUser}</Text>
-                            <Text style={{ fontSize: 13, color: '#fff' }}>{props.npmUser}</Text>
+                            <View style={{
+                                width: screenWidth,
+                                height: 240,
+                                backgroundColor: '#598c5f',
+                                paddingTop: 15
+                            }}>
+                                <View style={{
+                                    width: screenWidth,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'flex-start',
+                                }}>
+                                    <View style={{ width: '25%' }}>
+                                        <Text style={{ fontSize: 15, fontWeight: '100', textAlign: 'center', color: '#fff' }}>{this.state.jurusanUser}</Text>
+                                    </View>
+                                    <View style={{ width: '50%', alignItems: 'center' }}>
+                                        <Thumbnail source={this.state.profilPictUrl === '' ? require('../../assets/ProfileIcon.png') : { uri: this.state.profilPictUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} />
+                                    </View>
+                                    <View style={{ width: '25%', alignItems: 'center' }}>
+                                        <Button rounded transparent style={{ alignSelf: 'center' }} onPress={() => this.props.navigation.navigate('EditProfile')}>
+                                            <Icon style={{ color: '#fff', fontWeight: 'bold' }} type='Feather' name='edit' />
+                                        </Button>
+                                    </View>
+                                </View>
+
+                                <View style={{
+                                    width: screenWidth,
+                                    alignItems: 'center',
+                                }}>
+                                    <Text style={{ color: '#fff', fontWeight: '500', fontSize: 18, marginVertical: 10, textTransform: 'uppercase' }}>{this.state.namaUser}</Text>
+                                    <View style={{
+                                        width: '50%',
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        <Text style={{ fontSize: 13, color: '#fff' }}>{this.state.kelasUser}</Text>
+                                        <Text style={{ fontSize: 13, color: '#fff' }}>{this.state.npmUser}</Text>
+                                    </View>
+                                </View>
+
+                                <View style={{
+                                    width: screenWidth,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-around',
+                                    marginTop: 30
+                                }}>
+                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Post's : 4</Text>
+                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Trends : 10</Text>
+                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : 50</Text>
+                                </View>
+                            </View>
+
+                            <Tabs tabBarUnderlineStyle={{ borderWidth: 2, borderColor: '#598c5f' }}>
+                                <Tab
+                                    heading={<TabHeading style={{ backgroundColor: '#fff' }}><Icon style={{ color: '#598c5f' }} type='Ionicons' name="send" /><Text style={{ color: '#598c5f' }}>All Post's</Text></TabHeading>}>
+                                    <TabProfilPost />
+
+                                </Tab>
+                            </Tabs>
                         </View>
-                    </View>
 
-                    <View style={{
-                        width: screenWidth,
-                        flexDirection: 'row',
-                        justifyContent: 'space-around',
-                        marginTop: 30
-                    }}>
-                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Post's : 4</Text>
-                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Trends : 10</Text>
-                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : 50</Text>
-                    </View>
-                </View>
 
-                <Tabs tabBarUnderlineStyle={{ borderWidth: 2, borderColor: '#660066' }}>
-                    <Tab
-                        heading={<TabHeading style={{ backgroundColor: '#fff' }}><Icon style={{ color: '#660066' }} type='Feather' name="file-text" /><Text></Text></TabHeading>}>
-                        <TabProfilPost />
+                    </Content>
 
-                    </Tab>
-                    <Tab
-                        heading={<TabHeading style={{ backgroundColor: '#fff' }}><Icon style={{ color: '#660066' }} type='Feather' name="bell" /><Text></Text></TabHeading>}>
-                        <TabNotification />
-
-                    </Tab>
-                </Tabs>
-            </View>
-        </ScrollView>
-    );
+                    <Content>
+                        <Text style={{ textAlign: 'center', fontSize: 45 }}>NOTIFICATION</Text>
+                    </Content>
+                </Swiper>
+            </Container>
+        );
+    }
 }
+
+export default ProfilePage;
+
+
+
 

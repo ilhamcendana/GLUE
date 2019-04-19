@@ -1,22 +1,30 @@
 import React, { Component } from 'react';
 import { StyleSheet, View, Image, ScrollView, Dimensions } from 'react-native';
 import { Title, Container, Header, Content, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, Right } from 'native-base';
-import fire from '../../config';
+import * as firebase from 'firebase';
 import Swiper from 'react-native-swiper';
 import Feed from '../Feed/Feed';
+import ProfilePageStack from '../ProfilePageStack';
+import CustomDrawer from './CustomDrawer';
+import { createDrawerNavigator, createAppContainer, DrawerItems, } from 'react-navigation';
 import ProfilePage from '../ProfilePage/ProfilePage';
+import FillProfilePage from '../FillProfilePage/FillProfilePage';
 // import console = require('console');
 
 
-export default class LandingLayout extends Component {
+class LandingLayout extends Component {
     state = {
     }
 
     //WARNING! To be deprecated in React v17. Use componentDidMount instead.
     componentWillMount() {
     }
+
+
     render() {
         let screenWidth = Dimensions.get('window').width;
+
+
         let verifonfeed = (
             <View style={{ width: screenWidth, flex: 1, justifyContent: 'center' }}>
                 <Text style={{ fontSize: 50, textAlign: 'center' }}>Verification your email to open feed</Text>
@@ -45,21 +53,20 @@ export default class LandingLayout extends Component {
                 }}>
                     <Text>Resend Email Verification</Text>
                 </Button>
+                <Button onPress={() => firebase.auth().signOut()}><Text>SIGNOUT</Text></Button>
             </View>
         );
+
+
+
+
         return (
-            <Swiper loop={false} showsPagination={false} index={this.props.emailVerified ? 0 : 1} bounces={true}
+            <>
+                <LandingNavigator />
+                {/* <Swiper loop={false} showsPagination={false} index={this.props.emailVerified ? 0 : 1} bounces={true}
                 onIndexChanged={this.props.indexChange}
             >
 
-                <ProfilePage
-                    openEdit={this.props.openEdit}
-                    namaUser={this.props.namaUser}
-                    npmUser={this.props.npmUser}
-                    kelasUser={this.props.kelasUser}
-                    jurusanUser={this.props.jurusanUser}
-                    profilPictUrlFetch={this.props.profilPictUrlFetch}
-                />
 
                 {this.props.emailVerified ? <Feed PickImagePost={this.props.PickImagePost} uid={this.props.uid} /> : verifonfeed}
                 {this.props.emailVerified ? <View style={{
@@ -75,11 +82,28 @@ export default class LandingLayout extends Component {
                     </Button>
                 </View> : verifontrends}
 
-            </Swiper>
+            </Swiper> */}
+            </>
         )
     }
-
-
 }
 
+export default LandingLayout;
 
+
+const DrawerNav = createDrawerNavigator({
+    Home: { screen: Feed },
+    Profile: { screen: ProfilePage },
+    EditProfile: { screen: FillProfilePage }
+},
+    {
+        drawerPosition: 'left',
+        contentComponent: ({ navigation }) => {
+            return (<CustomDrawer
+                gotoProfile={() => navigation.navigate('Profile')}
+                gotoHome={() => navigation.navigate('Home')} />)
+        },
+    }
+);
+
+const LandingNavigator = createAppContainer(DrawerNav);
