@@ -1,57 +1,227 @@
 import React, { Component } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Form, Textarea, Input, Item, Content, Icon, Button, Text, Toast } from 'native-base';
-import { Camera, Permissions } from 'expo';
+import { View, Dimensions, Animated, KeyboardAvoidingView } from 'react-native';
+import { Spinner, Form, Textarea, Input, Item, Content, Icon, Left, Right, Button, Text, Toast, Header, Body, Thumbnail, Container } from 'native-base';
+import { ImagePicker, Permissions } from 'expo';
+import * as firebase from 'firebase';
+
 
 export default class InputPengaduan extends Component {
     state = {
-        nama: 'ilhamcendana',
-        input: '',
-        showSuccess: false
+        spinner: false,
+        postPict: '',
+        postPictUrl: '',
+        postedAnim: new Animated.Value(0),
+        success: false,
+        caption: '',
+        username: '',
     }
 
-    ngadu = () => {
-        const d = new Date();
-        const time = d.getHours() + ':' + d.getMinutes();
-        const monthNames = ["January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ];
-        const date = d.getDate() + '-' + monthNames[d.getMonth()] + '-' + d.getFullYear();
-        const aduan = {
-            nama: this.state.nama,
-            aduan: this.state.input,
-            date,
-            time
+    componentDidMount() {
+        firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile')
+            .on('value', (snapshot) => {
+                this.setState({
+                    username: snapshot.val().nama
+                })
+            });
+    }
+
+
+    postedAnim = () => {
+        Animated.timing(this.state.postedAnim, {
+            toValue: 1,
+            duration: 500,
+            delay: 150
+        }).start(() => {
+            this.postedClosedAnim();
+        })
+    }
+
+    postedClosedAnim = () => {
+        Animated.timing(this.state.postedAnim, {
+            toValue: 1,
+            duration: 500,
+            delay: 800
+        }).start(() => {
+            this.setState({
+                success: false
+            });
+            this.props.navigation.navigate('FeedComponent')
+        })
+    }
+
+
+    // IMAGE FROM PHONE EVENT SIGNUP
+    pickImage = async () => {
+        await Permissions.askAsync(Permissions.CAMERA_ROLL);
+        let result = await ImagePicker.launchImageLibraryAsync({
+            allowsEditing: true,
+            aspect: [4, 5]
+        });
+        if (!result.cancelled) {
+            this.setState({ postPict: result.uri });
+        }
+    }
+
+
+    takeImage = async () => {
+        await Permissions.askAsync(Permissions.CAMERA);
+        let result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            aspect: [4, 5]
+        });
+        if (!result.cancelled) {
+            this.setState({ postPict: result.uri });
         };
-        axios.post('https://forumpengaduan.firebaseio.com/data.json', aduan);
-        this.setState({ input: '', showSuccess: true });
+    };
+
+    uploadProfilPict = async (uri) => {
+        // Why are we using XMLHttpRequest? See:
+        // https://github.com/expo/expo/issues/2402#issuecomment-443726662 
+        const blob = await new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.onload = function () {
+                resolve(xhr.response);
+            };
+            xhr.onerror = function (e) {
+                console.log(e);
+                reject(new TypeError('Network request failed'));
+            };
+            xhr.responseType = 'blob';
+            xhr.open('GET', uri, true);
+            xhr.send(null);
+        });
+
+        const date = new Date();
+        const ref = firebase
+            .storage()
+            .ref('POST-PICTURE/' + 'POSTP_' + date.getDay() + '-' + date.getMonth() + '-' + date.getFullYear() + '::' + date.getMilliseconds());
+        const snapshot = await ref.put(blob);
+
+        // We're done with the blob, close and release it
+        blob.close();
+        const postPictUrl = await snapshot.ref.getDownloadURL();
+        return this.setState({ postPictUrl });
+    }
+    //END IMAGE FROM PHONE EVENT SIGNUP------------------------------
+
+
+    POSTING = () => {
+        this.setState({ spinner: true });
+        if (this.state.postPict !== '') {
+            this.uploadProfilPict(this.state.postPict)
+                .then(() => {
+                    // A post entry.
+                    const uid = firebase.auth().currentUser.uid;
+                    let postData = {
+                        username: this.state.username,
+                        uid: uid,
+                        caption: this.state.caption,
+                        totalUpVote: 0,
+                        totalDownVote: 0,
+                        totalRepor: 0,
+                        isTrend: false,
+                        postPict: this.state.postPictUrl
+                    };
+
+                    // Get a key for a new Post.
+                    let newPostKey = firebase.database().ref().child('posts').push().key;
+
+                    // Write the new post's data simultaneously in the posts list and the user's post list.
+                    let updates = {};
+                    updates['posts/' + newPostKey] = postData;
+                    updates['users/' + uid + '/posts/' + '/' + newPostKey] = postData;
+
+                    firebase.database().ref().update(updates);
+                }).then(() => {
+                    this.setState({ success: true, spinner: false });
+                    this.postedAnim();
+                })
+                .catch((err) => console.log(err));
+        } else {
+            // A post entry.
+            const uid = firebase.auth().currentUser.uid;
+            let postData = {
+                username: this.state.username,
+                uid: uid,
+                caption: this.state.caption,
+                totalUpVote: 0,
+                totalDownVote: 0,
+                totalRepor: 0,
+                isTrend: false,
+                postPict: this.state.postPictUrl
+            };
+
+            // Get a key for a new Post.
+            let newPostKey = firebase.database().ref().child('posts').push().key;
+
+            // Write the new post's data simultaneously in the posts list and the user's post list.
+            let updates = {};
+            updates['posts/' + newPostKey] = postData;
+            updates['users/' + uid + '/posts/' + '/' + newPostKey] = postData;
+
+            firebase.database().ref().update(updates).then(() => {
+                this.setState({ success: true, spinner: false });
+                this.postedAnim();
+            })
+                .catch((err) => console.log(err));
+        }
+
     }
     render() {
-        const success = this.state.showSuccess ? (
-            <View style={styles.success}>
-                <Text style={{ textAlign: "center", fontSize: 30, color: '#fff' }}>Terkirim!</Text>
+        const screenWidth = Dimensions.get('window').width;
+        const screenHeight = Dimensions.get('window').height;
+
+        const spinner = this.state.spinner ? (
+            <View style={{ width: screenWidth, alignItems: 'center', position: 'absolute', zIndex: 100, }}>
+                <Spinner color='green' />
+            </View>
+        ) : null;
+
+        const success = this.state.success ? (
+            <Animated.View style={{ opacity: this.state.postedAnim, zIndex: 101, width: screenWidth, height: screenHeight, position: 'absolute', backgroundColor: '#598c5f', justifyContent: 'center', alignItems: 'center' }}>
+                <Text style={{ color: '#fff', fontSize: 45 }}>POSTED !</Text>
+            </Animated.View>
+        ) : null;
+
+        const PreviewPict = this.state.postPict !== '' ? (
+            <View style={{ width: '100%' }}>
+                <Thumbnail square source={{ uri: this.state.postPict }} style={{ width: '100%', height: 300 }} />
             </View>
         ) : null;
         return (
-            <Content padder>
+            <Container>
                 {success}
-                <Form>
-                    <Textarea bordered rowSpan={5} placeholder='isi pengaduan' returnKeyType='default' onChangeText={(e) => this.setState({ input: e })} value={this.state.input} />
-                    <Button info block style={{ marginTop: 20 }} onPress={this.ngadu}><Text>Kirim</Text></Button>
-
-                </Form>
-            </Content>
+                <Content padder>
+                    {spinner}
+                    {PreviewPict}
+                    <KeyboardAvoidingView enabled behavior='padding'>
+                        <Form style={{ marginTop: 20 }}>
+                            <View style={{ flexDirection: 'row', marginBottom: 15, }}>
+                                <Button small rounded style={{ backgroundColor: '#598c5f', marginRight: 20 }} onPress={this.takeImage}>
+                                    <Icon type='Feather' name='camera' />
+                                </Button>
+                                <Button small rounded style={{ backgroundColor: '#598c5f' }} onPress={this.pickImage}>
+                                    <Icon type='Feather' name='image' />
+                                </Button>
+                            </View>
+                            <Textarea style={{ borderRadius: 10, paddingVertical: 10 }} bordered
+                                rowSpan={5}
+                                placeholder='isi pengaduan'
+                                returnKeyType='default' onChangeText={(e) => this.setState({ caption: e })} value={this.state.caption} />
+                        </Form>
+                        <Button rounded block
+                            onPress={this.POSTING}
+                            style={{ backgroundColor: '#fff', alignItems: 'center' }}>
+                            <Text style={{ color: '#598c5f' }}>Post</Text>
+                        </Button>
+                    </KeyboardAvoidingView>
+                </Content>
+            </Container>
         );
     }
 }
 
-const styles = StyleSheet.create({
-    success: {
-        backgroundColor: 'lightgreen',
-        paddingVertical: 20,
 
-    }
-});
 
 
 

@@ -5,9 +5,11 @@ import { Container, Header, Content, Right, Card, CardItem, Input, ListItem, Rad
 import Info from '../Info/Info';
 import fire from '../../config';
 import Swiper from 'react-native-swiper';
+import { createAppContainer, createStackNavigator } from 'react-navigation';
+import InputPengaduan from '../InputPengaduan/InputPengaduan';
+import InputPengaduanCustomHeader from '../InputPengaduan/InputPengaduanCustomHeader';
 
-
-export default class Feed extends Component {
+class Feed extends Component {
     state = {
         swiperHeaderTitle: 'GLUE',
         isVoteUp: false,
@@ -24,6 +26,10 @@ export default class Feed extends Component {
         inputPost: '',
         posts: [],
         btnPostDisabled: false
+    }
+
+    static navigationOptions = {
+        header: null
     }
 
     componentDidMount() {
@@ -286,7 +292,9 @@ export default class Feed extends Component {
 
                         </Content>
 
-                        <Button style={{ position: 'absolute', bottom: 20, right: 20, width: 56, height: 56, borderRadius: 56 / 2, backgroundColor: '#598c5f' }}>
+                        {/* WRITE POST BUTTON */}
+                        <Button onPress={() => this.props.navigation.navigate('CreatePostComponent')}
+                            style={{ position: 'absolute', bottom: 20, right: 20, width: 56, height: 56, borderRadius: 56 / 2, backgroundColor: '#598c5f' }}>
                             <Icon type='Feather' name='plus-circle' />
                         </Button>
 
@@ -310,3 +318,14 @@ export default class Feed extends Component {
 
 }
 
+const stackFeed = createStackNavigator({
+    FeedComponent: Feed,
+    CreatePostComponent: {
+        screen: InputPengaduan,
+        navigationOptions: {
+            header: props => <InputPengaduanCustomHeader backToFeed={() => props.navigation.navigate('FeedComponent')} />
+        }
+    }
+})
+
+export default createAppContainer(stackFeed);

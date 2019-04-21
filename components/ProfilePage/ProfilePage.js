@@ -9,7 +9,6 @@ import Swiper from 'react-native-swiper';
 
 
 
-
 class ProfilePage extends Component {
     constructor(props) {
         super(props);
@@ -19,7 +18,10 @@ class ProfilePage extends Component {
             kelasUser: '',
             npmUser: '',
             jurusanUser: '',
-            profilPictUrl: ''
+            profilPictUrl: '',
+            totalPost: 0,
+            totalTrends: 0,
+            totalVote: 0,
         }
     }
 
@@ -28,16 +30,24 @@ class ProfilePage extends Component {
     }
 
     componentWillMount() {
+        this.fetchProfileData();
+    }
+
+    fetchProfileData = () => {
         firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile').on('value', (snapshot) => {
             this.setState({
                 namaUser: snapshot.val().nama,
                 kelasUser: snapshot.val().kelas,
                 npmUser: snapshot.val().npm,
                 jurusanUser: snapshot.val().jurusan,
-                profilPictUrl: snapshot.val().profilPictUrl
+                profilPictUrl: snapshot.val().profilPictUrl,
+                totalPost: snapshot.val().totalPost,
+                totalTrends: snapshot.val().totalTrends,
+                totalVote: snapshot.val().totalVote
             });
         });
-    }
+    };
+
 
     render() {
         let screenWidth = Dimensions.get('window').width;
@@ -110,9 +120,9 @@ class ProfilePage extends Component {
                                     justifyContent: 'space-around',
                                     marginTop: 30
                                 }}>
-                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Post's : 4</Text>
-                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Trends : 10</Text>
-                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : 50</Text>
+                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Post's : {this.state.totalPost}</Text>
+                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Trends : {this.state.totalTrends}</Text>
+                                    <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : {this.state.totalVote}</Text>
                                 </View>
                             </View>
 

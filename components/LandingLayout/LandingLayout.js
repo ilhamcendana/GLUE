@@ -3,13 +3,17 @@ import { StyleSheet, View, Image, ScrollView, Dimensions } from 'react-native';
 import { Title, Container, Header, Content, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, Right } from 'native-base';
 import * as firebase from 'firebase';
 import Swiper from 'react-native-swiper';
+import { createDrawerNavigator, createAppContainer, DrawerItems, } from 'react-navigation';
+
+
+
 import Feed from '../Feed/Feed';
 import ProfilePageStack from '../ProfilePageStack';
 import CustomDrawer from './CustomDrawer';
-import { createDrawerNavigator, createAppContainer, DrawerItems, } from 'react-navigation';
 import ProfilePage from '../ProfilePage/ProfilePage';
 import FillProfilePage from '../FillProfilePage/FillProfilePage';
-// import console = require('console');
+import inputPengaduan from '../InputPengaduan/InputPengaduan';
+
 
 
 class LandingLayout extends Component {
@@ -94,7 +98,8 @@ export default LandingLayout;
 const DrawerNav = createDrawerNavigator({
     Home: { screen: Feed },
     Profile: { screen: ProfilePage },
-    EditProfile: { screen: FillProfilePage }
+    EditProfile: { screen: FillProfilePage },
+    createPost: { screen: inputPengaduan }
 },
     {
         drawerPosition: 'left',

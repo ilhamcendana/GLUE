@@ -80,9 +80,11 @@ export default class SignUpPage extends Component {
                         profilPictUrl: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c',
                         totalPost: 0,
                         totalVote: 0,
-                        totalTrends: 0
+                        totalTrends: 0,
+                        isVerified: false
+                    });
 
-                    }).then(() => this.setState({
+                    this.setState({
                         inputNamaProfile: '',
                         inputKelasProfile: '',
                         inputNPMProfile: '',
@@ -91,7 +93,7 @@ export default class SignUpPage extends Component {
                         signupPassValue: '',
                         spinner: false,
                         gotoSignup: false
-                    }));
+                    })
 
 
                 })

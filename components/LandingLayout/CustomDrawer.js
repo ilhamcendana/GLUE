@@ -7,7 +7,8 @@ import * as firebase from 'firebase';
 class CustomDrawer extends Component {
     state = {
         profilPictUrl: '',
-        nama: ''
+        nama: '',
+        isVerified: ''
     }
 
     componentWillMount() {
@@ -15,7 +16,8 @@ class CustomDrawer extends Component {
             .on('value', (snapshot) => {
                 this.setState({
                     profilPictUrl: snapshot.val().profilPictUrl,
-                    nama: snapshot.val().nama
+                    nama: snapshot.val().nama,
+                    isVerified: snapshot.val().isVerified
                 })
             })
     }
@@ -26,7 +28,10 @@ class CustomDrawer extends Component {
                 <Header style={{ height: 200, backgroundColor: '#598c5f' }}>
                     <Body style={{ alignItems: 'center' }}>
                         <View>
-                            <View style={{ borderRadius: 15, justifyContent: 'center', alignItems: 'center', width: 30, height: 30, position: 'absolute', right: 0, zIndex: 5, backgroundColor: firebase.auth().currentUser.emailVerified ? '#4ba86a' : '#ce164d', flex: 1 }}><Icon style={{ fontSize: 15, color: '#fff' }} type='Feather' name={firebase.auth().currentUser.emailVerified ? 'check' : 'x'} /></View>
+                            <View style={{
+                                borderRadius: 15, justifyContent: 'center', alignItems: 'center', width: 30, height: 30, position: 'absolute', right: 0, zIndex: 5,
+                                backgroundColor: this.state.isVerified ? '#4ba86a' : '#ce164d', flex: 1
+                            }}><Icon style={{ fontSize: 15, color: '#fff' }} type='Feather' name={this.state.isVerified ? 'check' : 'x'} /></View>
                             <Thumbnail source={this.state.profilPictUrl === '' ? require('../../assets/ProfileIcon.png') : { uri: this.state.profilPictUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} />
                         </View>
                         <Text style={{ marginTop: 15, color: '#fff' }}>{this.state.nama}</Text>
