@@ -28,7 +28,12 @@ class FillProfilePage extends Component {
         inputKelasProfile: '',
         inputNPMProfile: '',
         inputJurusanProfile: '',
-        profilePictUrl: ''
+        profilePictUrl: '',
+        isVerified: '',
+        userEmail: '',
+        totalPost: '',
+        totalTrends: '',
+        totalVote: ''
     }
 
     componentWillMount() {
@@ -39,7 +44,12 @@ class FillProfilePage extends Component {
                     inputNamaProfile: snapshot.val().nama,
                     inputKelasProfile: snapshot.val().kelas,
                     inputNPMProfile: snapshot.val().npm,
-                    inputJurusanProfile: snapshot.val().jurusan
+                    inputJurusanProfile: snapshot.val().jurusan,
+                    isVerified: snapshot.val().isVerified,
+                    userEmail: snapshot.val().email,
+                    totalPost: snapshot.val().totalPost,
+                    totalTrends: snapshot.val().totalTrends,
+                    totalVote: snapshot.val().totalVote
                 });
             });
     };
@@ -106,14 +116,20 @@ class FillProfilePage extends Component {
     //END IMAGE FROM PHONE EVENT SIGNUP------------------------------
 
     changeEditProfile = () => {
-        const { inputJurusanProfile, inputKelasProfile, inputNPMProfile, inputNamaProfile, profilePictUrl } = this.state;
+        const { inputJurusanProfile, inputKelasProfile, inputNPMProfile, inputNamaProfile, profilePictUrl,
+            isVerified, userEmail, totalPost, totalTrends, totalVote } = this.state;
         firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile')
             .set({
                 nama: inputNamaProfile,
                 kelas: inputKelasProfile,
                 npm: inputNPMProfile,
                 jurusan: inputJurusanProfile,
-                profilPictUrl: profilePictUrl
+                profilPictUrl: profilePictUrl,
+                isVerified: isVerified,
+                userEmail: userEmail,
+                totalPost: totalPost,
+                totalTrends: totalTrends,
+                totalVote: totalVote
             })
             .then(() => {
                 this.props.navigation.navigate('Profile');

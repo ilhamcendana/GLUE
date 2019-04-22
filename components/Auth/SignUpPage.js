@@ -24,6 +24,7 @@ export default class SignUpPage extends Component {
         spinner: false,
         signupEmailValue: '',
         signupPassValue: '',
+        signupRePassValue: '',
         inputNamaProfile: '',
         inputKelasProfile: '',
         inputJurusanProfile: ''
@@ -42,6 +43,10 @@ export default class SignUpPage extends Component {
         this.setState({ signupPassValue: e });
     };
 
+    signupRePassValChange = (e) => {
+        this.setState({ signupRePassValue: e });
+    };
+
     inputNamaProfileEvent = e => {
         this.setState({ inputNamaProfile: e });
     }
@@ -56,9 +61,9 @@ export default class SignUpPage extends Component {
     }
 
     signupEvent = () => {
-        const { signupEmailValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+        const { signupEmailValue, signupRePassValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
         this.setState({ spinner: true });
-        if (inputNamaProfile === '' || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length !== 8) {
+        if (inputNamaProfile === '' || signupRePassValue !== signupPassValue || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length !== 8) {
             alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
             this.setState({ spinner: false });
         } else {
@@ -92,7 +97,6 @@ export default class SignUpPage extends Component {
                         signupEmailValue: '',
                         signupPassValue: '',
                         spinner: false,
-                        gotoSignup: false
                     })
 
 
@@ -168,6 +172,17 @@ export default class SignUpPage extends Component {
                                         secureTextEntry={true}
                                         onChangeText={this.signupPassValChange}
                                         value={this.state.signupPassValue}
+                                        autoCapitalize='none'
+                                    />
+                                </Item>
+
+                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                    <Label>Re-enter Password</Label>
+                                    <Input
+                                        returnKeyType='done'
+                                        secureTextEntry={true}
+                                        onChangeText={this.signupRePassValChange}
+                                        value={this.state.signupRePassValue}
                                         autoCapitalize='none'
                                     />
                                 </Item>

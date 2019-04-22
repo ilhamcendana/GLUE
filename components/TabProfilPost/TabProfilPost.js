@@ -6,7 +6,8 @@ import * as firebase from 'firebase';
 class TabProfilPost extends Component {
     state = {
         posts: [],
-        loading: false
+        loading: false,
+        refreshing: false
     }
 
     componentWillMount() {
@@ -21,13 +22,17 @@ class TabProfilPost extends Component {
                 let posts = [...this.state.posts];
                 let dataFromDB = childSnapshot.val();
                 posts.push(dataFromDB);
-                this.setState({ posts, loading: false });
+                this.setState({ posts, loading: false, refreshing: false });
                 // console.log(this.state.posts, 'slicing');
                 // const childKey = childSnapshot.key;
                 // const childData = childSnapshot.val().caption;
 
             });
         });
+    };
+
+    handleRefresh = () => {
+        this.setState({ refreshing: true }, () => this.fetchProfilePosts());
     };
 
     renderFooter = () => {
@@ -40,70 +45,16 @@ class TabProfilPost extends Component {
     }
 
     render() {
-        const post = this.state.posts.map(post => {
-            return (
-                <Content padder>
-                    <Card style={{ borderRadius: 20, borderWidth: 5 }}>
-                        <CardItem bordered header style={{ borderRadius: 20 }}>
-                            <Left>
-                                <Thumbnail source={require('../../assets/ProfileIcon.png')} />
-                                <Body>
-                                    <Text>{post.username}</Text>
-                                    <Text note>April 15, 2019</Text>
-                                </Body>
-                                <Right>
-                                    {post.isTrend ?
-                                        <Button transparent >
-                                            <Icon type='Ionicons' name='star-outline' style={{ color: '#660066' }} />
-                                        </Button>
-                                        : null}
-                                </Right>
-                            </Left>
-                        </CardItem>
-                        <CardItem>
-                            <Body>
-                                <Image source={{ uri: 'https://placeimg.com/740/580/tech' }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
-                                <Text>
-                                    {post.caption}
-                                </Text>
-                            </Body>
-                        </CardItem>
-                        <CardItem bordered style={{ borderRadius: 20 }}>
-                            <Left>
-                                <Button transparent style={{ justifyContent: 'center' }}>
-                                    <Icon name="arrow-up-circle" type='Feather'
-                                    /><Text>{post.totalUpVote}</Text>
 
-                                </Button>
 
-                                <Button transparent style={{ justifyContent: 'center' }} >
-                                    <Icon name="arrow-down-circle" type='Feather'
-                                    /><Text>{post.totalDownVote}</Text>
-                                </Button>
-
-                                <Button transparent style={{ justifyContent: 'center' }}>
-                                    <Icon name="chatbubbles" style={{ color: '#660066' }} /><Text style={{ color: '#660066' }}>123</Text>
-                                </Button>
-                            </Left>
-
-                            <Body></Body>
-
-                            <Right>
-                                <Button transparent style={{ justifyContent: 'center', width: 40 }} >
-                                    <Icon name="alert" type='Ionicons' style={{ color: '#660066' }} />
-                                </Button>
-                            </Right>
-                        </CardItem>
-                    </Card>
-                </Content>
-            )
-        })
         return (
             <>
                 <Content padder>
                     <FlatList
                         data={this.state.posts}
                         ListFooterComponent={this.renderFooter}
+                        refreshing={this.state.refreshing}
+                        onRefresh={this.handleRefresh}
                         renderItem={({ item }) => (
                             <Card style={{ borderRadius: 20, borderWidth: 5 }}>
                                 <CardItem bordered header style={{ borderRadius: 20 }}>
@@ -124,7 +75,9 @@ class TabProfilPost extends Component {
                                 </CardItem>
                                 <CardItem>
                                     <Body>
-                                        <Image source={{ uri: 'https://placeimg.com/740/580/tech' }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
+                                        {item.postPict !== '' ?
+                                            <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} /> :
+                                            null}
                                         <Text>
                                             {item.caption}
                                         </Text>

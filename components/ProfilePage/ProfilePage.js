@@ -68,7 +68,7 @@ class ProfilePage extends Component {
                 </Header>
                 <Swiper loop={false} showsPagination={false} index={0} bounces={true}
                     onIndexChanged={(e) => e === 0 ? this.setState({ swiperHeaderTitle: 'Profile' }) : this.setState({ swiperHeaderTitle: 'Notification' })}>
-                    <Content>
+                    {/* <Content>
                         <View style={{
                             flex: 1,
                             width: screenWidth,
@@ -125,19 +125,12 @@ class ProfilePage extends Component {
                                     <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : {this.state.totalVote}</Text>
                                 </View>
                             </View>
-
-                            <Tabs tabBarUnderlineStyle={{ borderWidth: 2, borderColor: '#598c5f' }}>
-                                <Tab
-                                    heading={<TabHeading style={{ backgroundColor: '#fff' }}><Icon style={{ color: '#598c5f' }} type='Ionicons' name="send" /><Text style={{ color: '#598c5f' }}>All Post's</Text></TabHeading>}>
-                                    <TabProfilPost />
-
-                                </Tab>
-                            </Tabs>
                         </View>
 
+                        <TabProfilPost />
 
-                    </Content>
-
+                    </Content> */}
+                    <TabProfilPost />
                     <Content>
                         <Text style={{ textAlign: 'center', fontSize: 45 }}>NOTIFICATION</Text>
                     </Content>
