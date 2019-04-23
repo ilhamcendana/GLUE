@@ -18,16 +18,15 @@ class TabProfilPost extends Component {
         this.setState({ loading: true });
         const ref = firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/posts');
         ref.on('value', (snapshot) => {
-            snapshot.forEach((childSnapshot) => {
-                let posts = [...this.state.posts];
-                let dataFromDB = childSnapshot.val();
-                posts.push(dataFromDB);
-                this.setState({ posts, loading: false, refreshing: false });
-                // console.log(this.state.posts, 'slicing');
-                // const childKey = childSnapshot.key;
-                // const childData = childSnapshot.val().caption;
 
-            });
+            // snapshot.forEach((childSnapshot) => {
+            //     let posts = Object.values(childSnapshot)
+            //     // this.setState({ posts, loading: false, refreshing: false });
+            console.log(snapshot);
+            //     // const childKey = childSnapshot.key;
+            //     // const childData = childSnapshot.val().caption;
+
+            // });
         });
     };
 
@@ -62,14 +61,17 @@ class TabProfilPost extends Component {
                                         <Thumbnail source={require('../../assets/ProfileIcon.png')} />
                                         <Body>
                                             <Text>{item.username}</Text>
-                                            <Text note>April 15, 2019</Text>
+                                            <Text note>{item.todayDate}</Text>
                                         </Body>
                                         <Right>
-                                            {item.isTrend ?
-                                                <Button transparent >
-                                                    <Icon type='Ionicons' name='star-outline' style={{ color: '#660066' }} />
-                                                </Button>
-                                                : null}
+                                            <View style={{ justifyContent: 'space-between' }}>
+                                                {!item.isTrend ?
+                                                    <Button transparent >
+                                                        <Icon type='Ionicons' name='star-outline' style={{ color: '#660066' }} />
+                                                    </Button>
+                                                    : null}
+                                                <Text note>{item.todayTime}</Text>
+                                            </View>
                                         </Right>
                                     </Left>
                                 </CardItem>

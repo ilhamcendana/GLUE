@@ -60,7 +60,8 @@ export default class App extends React.Component {
       npmUser: '',
       jurusanUser: '',
       profilPictUrlFetch: '',
-      MoreOptionX: new Animated.Value(400)
+      MoreOptionX: new Animated.Value(400),
+      loginSuccess: false
     }
 
     // Initialize firebase...
@@ -70,12 +71,14 @@ export default class App extends React.Component {
 
   onAuthStateChanged = (user) => {
     this.setState({ isAuthenticatedReady: true });
-    this.setState({ isAuthenticated: !!user })
+    this.setState({ isAuthenticated: !!user });
   }
 
   componentDidMount() {
 
   }
+
+
 
   _loadResourcesAsync = async (e) => {
     return Promise.all([
@@ -102,6 +105,7 @@ export default class App extends React.Component {
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
           {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
           {Platform.OS === 'android' && <View style={{ height: 24, backgroundColor: 'rgba(0,0,0,0.2)' }} />}
+
           {(this.state.isAuthenticated) ? <LandingLayout /> : <RootNavigation />}
         </View>
       );

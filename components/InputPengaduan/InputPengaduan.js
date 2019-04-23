@@ -107,6 +107,11 @@ export default class InputPengaduan extends Component {
 
     POSTING = () => {
         this.setState({ spinner: true });
+        const date = new Date();
+        const monthName = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const month = date.getMonth();
+        const todayDate = date.getDate() + '-' + monthName[month] + '-' + date.getFullYear();
+        const todayTime = date.getHours() + ':' + date.getMinutes();
         if (this.state.postPict !== '') {
             this.uploadProfilPict(this.state.postPict)
                 .then(() => {
@@ -120,7 +125,9 @@ export default class InputPengaduan extends Component {
                         totalDownVote: 0,
                         totalRepor: 0,
                         isTrend: false,
-                        postPict: this.state.postPictUrl
+                        postPict: this.state.postPictUrl,
+                        todayDate: todayDate,
+                        todayTime: todayTime
                     };
 
                     // Get a key for a new Post.
@@ -148,7 +155,9 @@ export default class InputPengaduan extends Component {
                 totalDownVote: 0,
                 totalRepor: 0,
                 isTrend: false,
-                postPict: this.state.postPictUrl
+                postPict: this.state.postPictUrl,
+                todayDate: todayDate,
+                todayTime: todayTime
             };
 
             // Get a key for a new Post.
@@ -191,6 +200,21 @@ export default class InputPengaduan extends Component {
         return (
             <Container>
                 {success}
+                <Header style={{ backgroundColor: '#598c5f' }}>
+                    <Left style={{ flex: 1 }}>
+                        <Button bordered rounded onPress={() => this.props.navigation.navigate('FeedComponent')} style={{ alignItems: 'center', borderColor: '#fff' }} small>
+                            <Text style={{ color: '#fff' }}>Cancel</Text>
+                        </Button>
+                    </Left>
+                    <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>Create Post</Text></Body>
+                    <Right style={{ flex: 1 }}>
+                        <Button rounded small
+                            onPress={this.POSTING}
+                            style={{ backgroundColor: '#fff', alignItems: 'center' }}>
+                            <Text style={{ color: '#598c5f' }}>Post</Text>
+                        </Button>
+                    </Right>
+                </Header>
                 <Content padder>
                     {spinner}
                     {PreviewPict}
@@ -209,11 +233,6 @@ export default class InputPengaduan extends Component {
                                 placeholder='isi pengaduan'
                                 returnKeyType='default' onChangeText={(e) => this.setState({ caption: e })} value={this.state.caption} />
                         </Form>
-                        <Button rounded block
-                            onPress={this.POSTING}
-                            style={{ backgroundColor: '#fff', alignItems: 'center' }}>
-                            <Text style={{ color: '#598c5f' }}>Post</Text>
-                        </Button>
                     </KeyboardAvoidingView>
                 </Content>
             </Container>

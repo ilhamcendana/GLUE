@@ -25,7 +25,10 @@ class Feed extends Component {
         postImage: 'empty',
         inputPost: '',
         posts: [],
-        btnPostDisabled: false
+        btnPostDisabled: false,
+        feedAnimation: new Animated.Value(-Dimensions.get('window').width),
+        welcomePage: new Animated.Value(Dimensions.get('window').height),
+        headerAnimation: new Animated.Value(-400)
     }
 
     static navigationOptions = {
@@ -34,6 +37,7 @@ class Feed extends Component {
 
     componentDidMount() {
         this.fetchingPost();
+        this.welcome();
     }
 
     fetchingPost = () => {
@@ -44,7 +48,33 @@ class Feed extends Component {
         // console.log(this.state.post);
     }
 
+    feedAnimation = () => {
+        Animated.timing(this.state.feedAnimation, {
+            toValue: 0,
+            duration: 800
+        }).start();
 
+        Animated.timing(this.state.headerAnimation, {
+            toValue: 0,
+            duration: 800
+        }).start();
+    };
+
+    welcome = () => {
+        Animated.timing(this.state.welcomePage, {
+            toValue: 0,
+            duration: 500,
+        }).start(() => this.closeWelcome())
+    };
+
+    closeWelcome = () => {
+        const screenHeight = Dimensions.get('window').height;
+        Animated.timing(this.state.welcomePage, {
+            toValue: screenHeight,
+            duration: 500,
+            delay: 1000
+        }).start(() => this.feedAnimation())
+    };
 
 
     voteUp = () => {
@@ -158,72 +188,80 @@ class Feed extends Component {
         const voteColorDown = this.state.isVoteDown ? { color: '#f2101c' } : { color: '#660066' };
 
         const CardFeed = (
-            <Card style={{ borderRadius: 20, borderWidth: 5 }}>
-                <CardItem bordered header style={{ borderRadius: 20 }}>
-                    <Left>
-                        <Thumbnail source={require('../../assets/ProfileIcon.png')} />
+            <Animated.View style={{ translateX: this.state.feedAnimation }}>
+                <Card style={{ borderRadius: 20, borderWidth: 5, }}>
+                    <CardItem bordered header style={{ borderRadius: 20 }}>
+                        <Left>
+                            <Thumbnail source={require('../../assets/ProfileIcon.png')} />
+                            <Body>
+                                <Text>Ilham Cendana</Text>
+                                <Text note>April 15, 2019</Text>
+                            </Body>
+                            <Right>
+                                <Button transparent onPress={() => this.animated()}>
+                                    <Icon type='Ionicons' name={this.state.trendsInfo ? 'star' : 'star-outline'} style={{ color: '#660066' }} />
+                                </Button>
+                            </Right>
+                        </Left>
+                    </CardItem>
+                    <CardItem>
                         <Body>
-                            <Text>Ilham Cendana</Text>
-                            <Text note>April 15, 2019</Text>
+                            <Image source={{ uri: 'https://placeimg.com/740/580/tech' }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
+                            <Text>
+                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Libero recusandae, reprehenderit, delectus itaque inventore, reiciendis est ratione repellat facere cupiditate assumenda harum quae ducimus quibusdam. Ex, fugit! A, rem quo.
+                                            </Text>
                         </Body>
+                    </CardItem>
+                    <CardItem bordered style={{ borderRadius: 20 }}>
+                        <Left>
+                            <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteUp}>
+                                <Icon name="arrow-up-circle" type='Feather'
+                                    style={voteColorUp} /><Text style={voteColorUp}>{this.state.voteUpValue}</Text>
+
+                            </Button>
+
+                            <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteDown}>
+                                <Icon name="arrow-down-circle" type='Feather'
+                                    style={voteColorDown} /><Text style={voteColorDown}>{this.state.voteDownValue}</Text>
+                            </Button>
+
+                            <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.animated()}>
+                                <Icon name="chatbubbles" style={{ color: '#660066' }} /><Text style={{ color: '#660066' }}>123</Text>
+                            </Button>
+                        </Left>
+
+                        <Body></Body>
+
                         <Right>
-                            <Button transparent onPress={() => this.animated()}>
-                                <Icon type='Ionicons' name={this.state.trendsInfo ? 'star' : 'star-outline'} style={{ color: '#660066' }} />
+                            <Button transparent style={{ justifyContent: 'center', width: 40 }} onPress={() => this.openReport()}>
+                                <Icon name="alert" type='Ionicons' style={{ color: '#660066' }} />
                             </Button>
                         </Right>
-                    </Left>
-                </CardItem>
-                <CardItem>
-                    <Body>
-                        <Image source={{ uri: 'https://placeimg.com/740/580/tech' }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
-                        <Text>
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit. Libero recusandae, reprehenderit, delectus itaque inventore, reiciendis est ratione repellat facere cupiditate assumenda harum quae ducimus quibusdam. Ex, fugit! A, rem quo.
-                                            </Text>
-                    </Body>
-                </CardItem>
-                <CardItem bordered style={{ borderRadius: 20 }}>
-                    <Left>
-                        <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteUp}>
-                            <Icon name="arrow-up-circle" type='Feather'
-                                style={voteColorUp} /><Text style={voteColorUp}>{this.state.voteUpValue}</Text>
-
-                        </Button>
-
-                        <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteDown}>
-                            <Icon name="arrow-down-circle" type='Feather'
-                                style={voteColorDown} /><Text style={voteColorDown}>{this.state.voteDownValue}</Text>
-                        </Button>
-
-                        <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.animated()}>
-                            <Icon name="chatbubbles" style={{ color: '#660066' }} /><Text style={{ color: '#660066' }}>123</Text>
-                        </Button>
-                    </Left>
-
-                    <Body></Body>
-
-                    <Right>
-                        <Button transparent style={{ justifyContent: 'center', width: 40 }} onPress={() => this.openReport()}>
-                            <Icon name="alert" type='Ionicons' style={{ color: '#660066' }} />
-                        </Button>
-                    </Right>
-                </CardItem>
-            </Card>
+                    </CardItem>
+                </Card>
+            </Animated.View>
         );
         return (
             <>
-                <Header style={{ justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#598c5f' }}>
-                    <Left style={{ flex: 1 }}>
-                        <Button transparent onPress={() => this.props.navigation.openDrawer()} style={{ zIndex: 100 }}>
-                            <Icon name='menu' type='Feather' />
-                        </Button>
-                    </Left>
-                    <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>{this.state.swiperHeaderTitle}</Text></Body>
-                    <Right style={{ flex: 1 }}>
-                        <Button transparent>
-                            <Icon type='Feather' name='more-horizontal' />
-                        </Button>
-                    </Right>
-                </Header>
+                <Animated.View style={{ translateY: this.state.welcomePage, zIndex: 100, position: 'absolute', justifyContent: 'center', alignItems: 'center', width: Dimensions.get('window').width, height: Dimensions.get('window').height, backgroundColor: '#598c5f' }}>
+                    <Text style={{ fontWeight: '100', fontSize: 55, color: '#fff' }}>WELCOME</Text>
+                </Animated.View>
+
+                <Animated.View style={{ translateY: this.state.headerAnimation }}>
+                    <Header style={{ justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#598c5f' }}>
+                        <Left style={{ flex: 1 }}>
+                            <Button transparent onPress={() => this.props.navigation.openDrawer()} style={{ zIndex: 100 }}>
+                                <Icon name='menu' type='Feather' />
+                            </Button>
+                        </Left>
+                        <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>{this.state.swiperHeaderTitle}</Text></Body>
+                        <Right style={{ flex: 1 }}>
+                            <Button transparent>
+                                <Icon type='Feather' name='more-horizontal' />
+                            </Button>
+                        </Right>
+                    </Header>
+                </Animated.View>
                 <Swiper loop={false} showsPagination={false}
                     index={0}
                     bounces={true}
@@ -231,57 +269,6 @@ class Feed extends Component {
                     <Container>
                         <Content padder>
                             <ScrollView>
-                                {/* <View style={{ width: '100%', paddingHorizontal: 20, paddingTop: 10, backgroundColor: '#660066', height: 220, justifyContent: 'space-between' }}>
-                                <View style={{ width: '100%', flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 }}>
-                                    <View style={{ width: '15%', marginTop: 10 }}>
-                                        <Thumbnail source={require('../../assets/ProfileIcon.png')} small />
-                                    </View>
-                                    <Form style={{ width: '85%', }}>
-                                        <Textarea
-                                            onChangeText={this.InputChangePost}
-                                            bordered placeholder="Write something"
-                                            placeholderTextColor="#660066"
-                                            value={this.state.inputPost}
-                                            style={{ borderRadius: 10, borderColor: '#fff', paddingTop: 8, backgroundColor: '#fff', color: '#660066', height: 40 }} />
-                                        <View style={{ flexDirection: 'row', paddingVertical: 15, marginTop: 15, alignItems: 'center' }}>
-
-                                            <View>
-                                                <Text style={{ color: '#fff', }}>Pilih kategori</Text>
-                                                <View style={{ backgroundColor: '#fff', borderRadius: 10, width: 150, padding: 0, height: 30 }}>
-                                                    <Picker
-                                                        selectedValue={this.state.selectedKategori}
-                                                        style={{ height: 50, color: '#660066', maxHeight: 30 }}
-                                                        onValueChange={(itemValue, itemIndex) =>
-                                                            this.setState({ selectedKategori: itemValue })
-                                                        }
-                                                    >
-                                                        <Picker.Item label='INFO' value='INFO' />
-                                                        <Picker.Item label='PENGADUAN' value='PENGADUAN' />
-                                                    </Picker>
-                                                </View>
-                                            </View>
-                                            <Image source={{ uri: this.state.postImage }} style={{ width: 50, height: 50, marginLeft: 15 }} />
-                                        </View>
-                                    </Form>
-                                </View>
-
-                                <View style={{ width: '100%', backgroundColor: '#660066', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10 }}>
-                                    <View style={{ flexDirection: 'row', width: '50%' }}>
-                                        <Button style={{ marginRight: 10, backgroundColor: '#fff' }} small rounded onPress={this.TakeImagePost}>
-                                            <Icon type='Feather' name='camera' style={{ color: '#660066' }} />
-                                        </Button>
-                                        <Button small rounded style={{ backgroundColor: '#fff' }} onPress={this.PickImagePost}>
-                                            <Icon type='Feather' name='image' style={{ color: '#660066' }} />
-                                        </Button>
-                                    </View>
-                                    <Button rounded style={{ backgroundColor: '#fff' }} onPress={this.sendpost} disabled={this.state.btnPostDisabled}>
-                                        <Text style={{ color: '#660066' }}>POST</Text>
-                                    </Button>
-                                </View>
-
-                            </View> */}
-
-
                                 {CardFeed}
                                 {CardFeed}
                                 {CardFeed}
@@ -323,7 +310,7 @@ const stackFeed = createStackNavigator({
     CreatePostComponent: {
         screen: InputPengaduan,
         navigationOptions: {
-            header: props => <InputPengaduanCustomHeader backToFeed={() => props.navigation.navigate('FeedComponent')} />
+            header: null
         }
     }
 })
