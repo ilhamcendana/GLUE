@@ -14,6 +14,7 @@ export default class InputPengaduan extends Component {
         success: false,
         caption: '',
         username: '',
+        disablePostButton: false
     }
 
     componentDidMount() {
@@ -106,12 +107,14 @@ export default class InputPengaduan extends Component {
 
 
     POSTING = () => {
-        this.setState({ spinner: true });
+        this.setState({ spinner: true, disablePostButton: true });
         const date = new Date();
         const monthName = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         const month = date.getMonth();
         const todayDate = date.getDate() + '-' + monthName[month] + '-' + date.getFullYear();
         const todayTime = date.getHours() + ':' + date.getMinutes();
+        const mergeDate = `${date.getMinutes()}${date.getHours()}${date.getDate()}${date.getMonth()}${date.getFullYear()}`;
+        console.log(mergeDate);
         if (this.state.postPict !== '') {
             this.uploadProfilPict(this.state.postPict)
                 .then(() => {
@@ -121,13 +124,18 @@ export default class InputPengaduan extends Component {
                         username: this.state.username,
                         uid: uid,
                         caption: this.state.caption,
-                        totalUpVote: 0,
-                        totalDownVote: 0,
-                        totalRepor: 0,
-                        isTrend: false,
                         postPict: this.state.postPictUrl,
-                        todayDate: todayDate,
-                        todayTime: todayTime
+                        postInfo: {
+                            totalUpVote: 0,
+                            totalDownVote: 0,
+                            totalRepor: 0,
+                            isTrend: false,
+                        },
+                        date: {
+                            todayDate: todayDate,
+                            todayTime: todayTime,
+                            mergeDate: mergeDate
+                        }
                     };
 
                     // Get a key for a new Post.
@@ -151,13 +159,18 @@ export default class InputPengaduan extends Component {
                 username: this.state.username,
                 uid: uid,
                 caption: this.state.caption,
-                totalUpVote: 0,
-                totalDownVote: 0,
-                totalRepor: 0,
-                isTrend: false,
                 postPict: this.state.postPictUrl,
-                todayDate: todayDate,
-                todayTime: todayTime
+                postInfo: {
+                    totalUpVote: 0,
+                    totalDownVote: 0,
+                    totalRepor: 0,
+                    isTrend: false,
+                },
+                date: {
+                    todayDate: todayDate,
+                    todayTime: todayTime,
+                    mergeDate: mergeDate
+                }
             };
 
             // Get a key for a new Post.
@@ -169,7 +182,7 @@ export default class InputPengaduan extends Component {
             updates['users/' + uid + '/posts/' + '/' + newPostKey] = postData;
 
             firebase.database().ref().update(updates).then(() => {
-                this.setState({ success: true, spinner: false });
+                this.setState({ success: true, spinner: false, disablePostButton: false });
                 this.postedAnim();
             })
                 .catch((err) => console.log(err));
@@ -209,6 +222,7 @@ export default class InputPengaduan extends Component {
                     <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>Create Post</Text></Body>
                     <Right style={{ flex: 1 }}>
                         <Button rounded small
+                            disabled={this.state.disablePostButton}
                             onPress={this.POSTING}
                             style={{ backgroundColor: '#fff', alignItems: 'center' }}>
                             <Text style={{ color: '#598c5f' }}>Post</Text>

@@ -104,7 +104,7 @@ export default class App extends React.Component {
       return (
         <View style={{ flex: 1, backgroundColor: '#fff' }}>
           {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-          {Platform.OS === 'android' && <View style={{ height: 24, backgroundColor: 'rgba(0,0,0,0.2)' }} />}
+          {Platform.OS === 'android' && <View style={{ height: 24, backgroundColor: '#598c5f' }} />}
 
           {(this.state.isAuthenticated) ? <LandingLayout /> : <RootNavigation />}
         </View>

@@ -28,7 +28,8 @@ class Feed extends Component {
         btnPostDisabled: false,
         feedAnimation: new Animated.Value(-Dimensions.get('window').width),
         welcomePage: new Animated.Value(Dimensions.get('window').height),
-        headerAnimation: new Animated.Value(-400)
+        headerAnimation: new Animated.Value(-400),
+        trendAnimated: new Animated.Value(Dimensions.get('window').width)
     }
 
     static navigationOptions = {
@@ -76,6 +77,23 @@ class Feed extends Component {
         }).start(() => this.feedAnimation())
     };
 
+    trendAnimated = () => {
+        this.setState({ trendsInfo: true });
+        Animated.timing(this.state.trendAnimated, {
+            toValue: 0,
+            duration: 500,
+            easing: Easing.circle
+        }).start(() => this.closeTrendAnimation());
+    };
+
+    closeTrendAnimation = () => {
+        const screenWidth = Dimensions.get('window').width;
+        Animated.timing(this.state.trendAnimated, {
+            toValue: screenWidth,
+            duration: 500,
+            delay: 1000
+        }).start(() => this.setState({ trendsInfo: false }));
+    };
 
     voteUp = () => {
         if (this.state.isVoteUp === false && this.state.isVoteDown === false) {
@@ -184,6 +202,7 @@ class Feed extends Component {
 
     render() {
         const screenWidth = Dimensions.get('window').width;
+        const screenHeight = Dimensions.get('window').height;
         const voteColorUp = this.state.isVoteUp ? { color: '#22d62b' } : { color: '#660066' };
         const voteColorDown = this.state.isVoteDown ? { color: '#f2101c' } : { color: '#660066' };
 
@@ -198,8 +217,8 @@ class Feed extends Component {
                                 <Text note>April 15, 2019</Text>
                             </Body>
                             <Right>
-                                <Button transparent onPress={() => this.animated()}>
-                                    <Icon type='Ionicons' name={this.state.trendsInfo ? 'star' : 'star-outline'} style={{ color: '#660066' }} />
+                                <Button transparent onPress={() => this.trendAnimated()}>
+                                    <Icon type='Ionicons' name={this.state.trendsInfo ? 'star' : 'star-outline'} style={{ color: '#598c5f' }} />
                                 </Button>
                             </Right>
                         </Left>
@@ -247,6 +266,10 @@ class Feed extends Component {
                     <Text style={{ fontWeight: '100', fontSize: 55, color: '#fff' }}>WELCOME</Text>
                 </Animated.View>
 
+                <Animated.View style={{ position: 'absolute', zIndex: 150, translateY: screenHeight / 2, translateX: this.state.trendAnimated, backgroundColor: '#598c5f', paddingVertical: 15, width: screenWidth }}>
+                    <Text style={{ textAlign: 'center', color: '#fff', fontWeight: 'bold' }}>This post is trend</Text>
+                </Animated.View>
+
                 <Animated.View style={{ translateY: this.state.headerAnimation }}>
                     <Header style={{ justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#598c5f' }}>
                         <Left style={{ flex: 1 }}>
@@ -286,6 +309,8 @@ class Feed extends Component {
                         </Button>
 
                     </Container>
+
+
                     <View style={{
                         backgroundColor: 'pink',
                         flex: 1,
