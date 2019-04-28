@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Dimensions, ScrollView, FlatList, ActivityIndicator } from 'react-native';
+import { View, Dimensions, ScrollView, FlatList, ActivityIndicator, Image, RefreshControl } from 'react-native';
 import { Thumbnail, Text, Button, Icon, Content, Header, CardItem, Container, Left, Body, Right, Card } from 'native-base';
 import * as firebase from 'firebase';
 import Swiper from 'react-native-swiper';
@@ -34,7 +34,7 @@ class ProfilePage extends Component {
 
     componentDidMount() {
         this.fetchProfileData();
-        this.fetchProfilePosts();
+        this.fetchingProfilePosts();
     }
 
     fetchProfileData = () => {
@@ -52,91 +52,26 @@ class ProfilePage extends Component {
         });
     };
 
-    fetchProfilePosts = () => {
-        this.setState({ loading: true });
+    fetchingProfilePosts = () => {
+        this.setState({ loading: true, posts: [] });
         const ref = firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/posts');
         ref.once('value', (snap) => {
-            const newData = Object.values(snap.val());
-            this.setState({ posts: newData, loading: false, refreshing: false })
-
+            if (snap.val() === null) {
+                this.setState({ posts: null, refreshing: false, loading: false });
+            } else {
+                const newData = Object.values(snap.val()).reverse();
+                const newPost = newData;
+                this.setState({ posts: newPost, loading: false, refreshing: false });
+            }
         })
-            .catch((err) => {
-                this.setState({ loading: false, refreshing: false });
-                alert(err);
-            });
-    };
-
-    headerComponent = () => {
-        let screenWidth = Dimensions.get('window').width;
-        return (
-            <View style={{
-                flex: 1,
-                width: screenWidth,
-                alignItems: 'center'
-            }}>
-                <View style={{
-                    width: screenWidth,
-                    height: 240,
-                    backgroundColor: '#598c5f',
-                    paddingTop: 15
-                }}>
-                    <View style={{
-                        width: screenWidth,
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                    }}>
-                        <View style={{ width: '25%' }}>
-                            <Text style={{ fontSize: 15, fontWeight: '100', textAlign: 'center', color: '#fff' }}>{this.state.jurusanUser}</Text>
-                        </View>
-                        <View style={{ width: '50%', alignItems: 'center' }}>
-                            <Thumbnail source={this.state.profilPictUrl === '' ? require('../../assets/ProfileIcon.png') : { uri: this.state.profilPictUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} />
-                        </View>
-                        <View style={{ width: '25%', alignItems: 'center' }}>
-                            <Button rounded transparent style={{ alignSelf: 'center' }} onPress={() => this.props.navigation.navigate('EditProfile')}>
-                                <Icon style={{ color: '#fff', fontWeight: 'bold' }} type='Feather' name='edit' />
-                            </Button>
-                        </View>
-                    </View>
-
-                    <View style={{
-                        width: screenWidth,
-                        alignItems: 'center',
-                    }}>
-                        <Text style={{ color: '#fff', fontWeight: '500', fontSize: 18, marginVertical: 10, textTransform: 'uppercase' }}>{this.state.namaUser}</Text>
-                        <View style={{
-                            width: '50%',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between'
-                        }}>
-                            <Text style={{ fontSize: 13, color: '#fff' }}>{this.state.kelasUser}</Text>
-                            <Text style={{ fontSize: 13, color: '#fff' }}>{this.state.npmUser}</Text>
-                        </View>
-                    </View>
-
-                    <View style={{
-                        width: screenWidth,
-                        flexDirection: 'row',
-                        justifyContent: 'space-around',
-                        marginTop: 30
-                    }}>
-                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Post's : {this.state.totalPost}</Text>
-                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Trends : {this.state.totalTrends}</Text>
-                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : {this.state.totalVote}</Text>
-                    </View>
-                </View>
-            </View>
-        )
     }
 
-    renderFooter = () => {
-        if (!this.state.loading) return null;
-        return (
-            <View style={{ paddingVertical: 20 }}>
-                <ActivityIndicator animating size="large" />
-            </View>
-        )
-    };
+
+    onRefreshEvent = () => {
+        this.setState({ refreshing: true }, () => this.fetchingProfilePosts())
+    }
+
+
 
     render() {
         let screenWidth = Dimensions.get('window').width;
@@ -157,77 +92,141 @@ class ProfilePage extends Component {
                 </Header>
                 <Swiper loop={false} showsPagination={false} index={0} bounces={true}
                     onIndexChanged={(e) => e === 0 ? this.setState({ swiperHeaderTitle: 'Profile' }) : this.setState({ swiperHeaderTitle: 'Notification' })}>
+                    <Container>
+                        <ScrollView
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={this.state.refreshing}
+                                    onRefresh={this.onRefreshEvent}
+                                />
+                            }
+                        >
 
-                    <FlatList
-                        data={this.state.posts}
-                        ListHeaderComponent={this.headerComponent}
-                        ListFooterComponent={this.renderFooter}
-                        refreshing={this.state.refreshing}
-                        onRefresh={() => this.setState({ refreshing: true }, this.fetchProfilePosts())}
-                        keyExtractor={(item) => item.caption}
-                        renderItem={({ item }) => (
-                            <Content padder>
-                                {console.log(this.state.posts)}
-                                <Card style={{ borderRadius: 20, borderWidth: 5 }}>
-                                    <CardItem bordered header style={{ borderRadius: 20 }}>
-                                        <Left>
-                                            <Thumbnail source={require('../../assets/ProfileIcon.png')} />
-                                            <Body>
-                                                <Text>{item.username}</Text>
-                                                <Text note>{item.todayDate}</Text>
-                                            </Body>
-                                            <Right>
-                                                <View style={{ justifyContent: 'space-between' }}>
-                                                    {!item.isTrend ?
-                                                        <Button transparent >
-                                                            <Icon type='Ionicons' name='star-outline' style={{ color: '#660066' }} />
+                            <View style={{
+                                flex: 1,
+                                width: screenWidth,
+                                alignItems: 'center'
+                            }}>
+                                <View style={{
+                                    width: screenWidth,
+                                    height: 240,
+                                    backgroundColor: '#598c5f',
+                                    paddingTop: 15
+                                }}>
+                                    <View style={{
+                                        width: screenWidth,
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'flex-start',
+                                    }}>
+                                        <View style={{ width: '25%' }}>
+                                            <Text style={{ fontSize: 15, fontWeight: '100', textAlign: 'center', color: '#fff' }}>{this.state.jurusanUser}</Text>
+                                        </View>
+                                        <View style={{ width: '50%', alignItems: 'center' }}>
+                                            <Thumbnail source={this.state.profilPictUrl === '' ? require('../../assets/ProfileIcon.png') : { uri: this.state.profilPictUrl }} style={{ width: 100, height: 100, borderRadius: 50 }} />
+                                        </View>
+                                        <View style={{ width: '25%', alignItems: 'center' }}>
+                                            <Button rounded transparent style={{ alignSelf: 'center' }} onPress={() => this.props.navigation.navigate('EditProfile')}>
+                                                <Icon style={{ color: '#fff', fontWeight: 'bold' }} type='Feather' name='edit' />
+                                            </Button>
+                                        </View>
+                                    </View>
+
+                                    <View style={{
+                                        width: screenWidth,
+                                        alignItems: 'center',
+                                    }}>
+                                        <Text style={{ color: '#fff', fontWeight: '500', fontSize: 18, marginVertical: 10, textTransform: 'uppercase' }}>{this.state.namaUser}</Text>
+                                        <View style={{
+                                            width: '50%',
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between'
+                                        }}>
+                                            <Text style={{ fontSize: 13, color: '#fff' }}>{this.state.kelasUser}</Text>
+                                            <Text style={{ fontSize: 13, color: '#fff' }}>{this.state.npmUser}</Text>
+                                        </View>
+                                    </View>
+
+                                    <View style={{
+                                        width: screenWidth,
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-around',
+                                        marginTop: 30
+                                    }}>
+                                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Post's : {this.state.totalPost}</Text>
+                                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>Trends : {this.state.totalTrends}</Text>
+                                        <Text style={{ fontWeight: '500', color: '#fff', fontSize: 13 }}>UP : {this.state.totalVote}</Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            {this.state.posts !== null ? this.state.posts.map(item => (
+                                <Content padder key={item.key}>
+                                    <Card style={{ borderRadius: 20, borderWidth: 5, }}>
+                                        <CardItem bordered header style={{ borderRadius: 20 }}>
+                                            <Left>
+                                                <Thumbnail source={require('../../assets/ProfileIcon.png')} />
+                                                <Body>
+                                                    <Text>{item.username}</Text>
+                                                    <Text note>{item.date.todayDate}</Text>
+                                                </Body>
+                                                <Right>
+                                                    <View style={{ justifyContent: 'space-between' }}>
+                                                        <Button transparent>
+                                                            <Icon type='Feather' name='more-horizontal'
+                                                                style={{ color: '#598c5f' }} />
                                                         </Button>
-                                                        : null}
-                                                    <Text note>{item.todayTime}</Text>
-                                                </View>
-                                            </Right>
-                                        </Left>
-                                    </CardItem>
-                                    <CardItem>
-                                        <Body>
-                                            {item.postPict !== '' ?
-                                                <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} /> :
-                                                null}
-                                            <Text>
-                                                {item.caption}
-                                            </Text>
-                                        </Body>
-                                    </CardItem>
-                                    <CardItem bordered style={{ borderRadius: 20 }}>
-                                        <Left>
-                                            <Button transparent style={{ justifyContent: 'center' }}>
-                                                <Icon name="arrow-up-circle" type='Feather'
-                                                /><Text>{item.totalUpVote}</Text>
+                                                        <Text note>{item.date.todayTime}</Text>
+                                                    </View>
+                                                </Right>
+                                            </Left>
+                                        </CardItem>
+                                        <CardItem>
+                                            <Body>
+                                                {item.postPict !== '' ?
+                                                    <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
+                                                    :
+                                                    null}
+                                                <Text>{item.caption}</Text>
+                                            </Body>
+                                        </CardItem>
+                                        <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
+                                            <View style={{ flexDirection: 'row' }}>
+                                                <Left>
 
-                                            </Button>
+                                                </Left>
 
-                                            <Button transparent style={{ justifyContent: 'center' }} >
-                                                <Icon name="arrow-down-circle" type='Feather'
-                                                /><Text>{item.totalDownVote}</Text>
-                                            </Button>
+                                                <Body>
+                                                    <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteUp}>
+                                                        <Icon name="arrow-up-circle" type='Feather'
+                                                        /><Text >{item.postInfo.totalUpVote} Vote</Text>
+                                                    </Button>
+                                                </Body>
 
-                                            <Button transparent style={{ justifyContent: 'center' }}>
-                                                <Icon name="chatbubbles" style={{ color: '#660066' }} /><Text style={{ color: '#660066' }}>123</Text>
-                                            </Button>
-                                        </Left>
+                                                <Right>
+                                                </Right>
+                                            </View>
+                                            <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.animated()}>
+                                                    <Text style={{ color: '#598c5f', fontSize: 10 }}>21 Comments</Text>
+                                                </Button>
+                                                {item.isTrend ?
+                                                    <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
+                                                        <Icon type='Ionicons' name='star'
+                                                            style={{ color: '#fff' }} />
+                                                    </Button>
+                                                    : null}
+                                            </View>
+                                        </CardItem>
+                                    </Card>
+                                </Content>
+                            )) : <View style={{ width: screenWidth, paddingVertical: 15, justifyContent: 'center', alignItems: 'center' }}>
+                                    <Text style={{ fontWeight: 'bold' }}>Anda belum mempunyai post</Text>
+                                    <Text style={{ textAlign: 'center' }}>Buat post dengan cara ke halaman beranda lalu ketuk tombol dengan icon tambah di bawah kanan layar anda</Text>
+                                </View>}
+                        </ScrollView>
+                    </Container>
 
-                                        <Body></Body>
-
-                                        <Right>
-                                            <Button transparent style={{ justifyContent: 'center', width: 40 }} >
-                                                <Icon name="alert" type='Ionicons' style={{ color: '#660066' }} />
-                                            </Button>
-                                        </Right>
-                                    </CardItem>
-                                </Card>
-                            </Content>
-                        )}
-                    />
 
                     {/* swipe to notification */}
                     <Content>

@@ -64,6 +64,8 @@ class SignInPage extends Component {
                 alert(e);
             });
     }
+
+
     //END ALL LOGIN EVENT -----------------------------
     render() {
         return (
@@ -80,7 +82,7 @@ class SignInPage extends Component {
                         top: 40,
                         backgroundColor: '#fff'
                     }}>
-                        <Spinner color='#660066' />
+                        <Spinner color='#598c5f' />
                     </View>
                 ) : null}
 
@@ -98,23 +100,26 @@ class SignInPage extends Component {
                             padding: 20,
                             justifyContent: 'center'
                         }}>
-                            <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                            <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                 <Label>Email</Label>
                                 <Input
                                     autoCapitalize='none'
                                     keyboardType='email-address'
-                                    returnKeyType='done'
+                                    returnKeyType='next'
                                     onChangeText={this.inputEmailValChange}
-                                    value={this.state.signEmailValue} />
+                                    value={this.state.signEmailValue}
+                                />
                             </Item>
-                            <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                            <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                 <Label>Password</Label>
                                 <Input
                                     secureTextEntry={true}
                                     returnKeyType='go'
                                     onChangeText={this.inputPassValChange}
                                     value={this.state.signPassValue}
-                                    autoCapitalize='none' />
+                                    autoCapitalize='none'
+                                    onSubmitEditing={this.loginEvent}
+                                />
                             </Item>
                             <Button rounded bordered onPress={this.loginEvent} style={{
                                 marginTop: 40,
@@ -122,7 +127,7 @@ class SignInPage extends Component {
                                 width: 150,
                                 display: 'flex',
                                 justifyContent: 'center',
-                                borderColor: '#660066',
+                                borderColor: '#598c5f',
                                 borderWidth: 2
                             }}>
                                 <Text style={{ color: '#640164' }}>Masuk</Text>
@@ -130,7 +135,7 @@ class SignInPage extends Component {
                             <Text style={{ textAlign: 'center', marginVertical: 15 }}>or</Text>
                             <Button
                                 rounded
-                                style={{ backgroundColor: '#660066', width: 150, display: 'flex', justifyContent: 'center', alignSelf: 'center' }}
+                                style={{ backgroundColor: '#598c5f', width: 150, display: 'flex', justifyContent: 'center', alignSelf: 'center' }}
                                 onPress={() => this.props.navigation.navigate('Signup')} ><Text>Buat akun</Text></Button>
                         </Form>
                     </KeyboardAvoidingView>

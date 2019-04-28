@@ -3,6 +3,7 @@ import { View, Dimensions, Animated, KeyboardAvoidingView } from 'react-native';
 import { Spinner, Form, Textarea, Input, Item, Content, Icon, Left, Right, Button, Text, Toast, Header, Body, Thumbnail, Container } from 'native-base';
 import { ImagePicker, Permissions } from 'expo';
 import * as firebase from 'firebase';
+import { ScrollView } from 'react-native-gesture-handler';
 
 
 export default class InputPengaduan extends Component {
@@ -113,13 +114,13 @@ export default class InputPengaduan extends Component {
         const month = date.getMonth();
         const todayDate = date.getDate() + '-' + monthName[month] + '-' + date.getFullYear();
         const todayTime = date.getHours() + ':' + date.getMinutes();
-        const mergeDate = `${date.getMinutes()}${date.getHours()}${date.getDate()}${date.getMonth()}${date.getFullYear()}`;
-        console.log(mergeDate);
         if (this.state.postPict !== '') {
             this.uploadProfilPict(this.state.postPict)
                 .then(() => {
                     // A post entry.
                     const uid = firebase.auth().currentUser.uid;
+                    // Get a key for a new Post.
+                    let newPostKey = firebase.database().ref().child('posts').push().key;
                     let postData = {
                         username: this.state.username,
                         uid: uid,
@@ -134,12 +135,9 @@ export default class InputPengaduan extends Component {
                         date: {
                             todayDate: todayDate,
                             todayTime: todayTime,
-                            mergeDate: mergeDate
-                        }
+                        },
+                        key: newPostKey
                     };
-
-                    // Get a key for a new Post.
-                    let newPostKey = firebase.database().ref().child('posts').push().key;
 
                     // Write the new post's data simultaneously in the posts list and the user's post list.
                     let updates = {};
@@ -155,6 +153,8 @@ export default class InputPengaduan extends Component {
         } else {
             // A post entry.
             const uid = firebase.auth().currentUser.uid;
+            // Get a key for a new Post.
+            let newPostKey = firebase.database().ref().child('posts').push().key;
             let postData = {
                 username: this.state.username,
                 uid: uid,
@@ -169,12 +169,10 @@ export default class InputPengaduan extends Component {
                 date: {
                     todayDate: todayDate,
                     todayTime: todayTime,
-                    mergeDate: mergeDate
-                }
+                },
+                key: newPostKey
             };
 
-            // Get a key for a new Post.
-            let newPostKey = firebase.database().ref().child('posts').push().key;
 
             // Write the new post's data simultaneously in the posts list and the user's post list.
             let updates = {};
@@ -206,8 +204,8 @@ export default class InputPengaduan extends Component {
         ) : null;
 
         const PreviewPict = this.state.postPict !== '' ? (
-            <View style={{ width: '100%' }}>
-                <Thumbnail square source={{ uri: this.state.postPict }} style={{ width: '100%', height: 300 }} />
+            <View style={{ width: '100%', alignItems: 'center', marginTop: 20 }}>
+                <Thumbnail square source={{ uri: this.state.postPict }} style={{ width: 250, height: 250 }} />
             </View>
         ) : null;
         return (
@@ -231,23 +229,26 @@ export default class InputPengaduan extends Component {
                 </Header>
                 <Content padder>
                     {spinner}
-                    {PreviewPict}
-                    <KeyboardAvoidingView enabled behavior='padding'>
-                        <Form style={{ marginTop: 20 }}>
-                            <View style={{ flexDirection: 'row', marginBottom: 15, }}>
-                                <Button small rounded style={{ backgroundColor: '#598c5f', marginRight: 20 }} onPress={this.takeImage}>
-                                    <Icon type='Feather' name='camera' />
-                                </Button>
-                                <Button small rounded style={{ backgroundColor: '#598c5f' }} onPress={this.pickImage}>
-                                    <Icon type='Feather' name='image' />
-                                </Button>
-                            </View>
-                            <Textarea style={{ borderRadius: 10, paddingVertical: 10 }} bordered
-                                rowSpan={5}
-                                placeholder='isi pengaduan'
-                                returnKeyType='default' onChangeText={(e) => this.setState({ caption: e })} value={this.state.caption} />
-                        </Form>
-                    </KeyboardAvoidingView>
+                    <ScrollView>
+                        <KeyboardAvoidingView enabled behavior='padding'>
+                            <Form style={{ marginTop: 20 }}>
+                                <View style={{ flexDirection: 'row', marginBottom: 15, }}>
+                                    <Button small rounded style={{ backgroundColor: '#598c5f', marginRight: 20 }} onPress={this.takeImage}>
+                                        <Icon type='Feather' name='camera' />
+                                    </Button>
+                                    <Button small rounded style={{ backgroundColor: '#598c5f' }} onPress={this.pickImage}>
+                                        <Icon type='Feather' name='image' />
+                                    </Button>
+                                </View>
+                                <Textarea style={{ borderRadius: 10, paddingVertical: 10 }} bordered
+                                    rowSpan={5}
+                                    autoFocus={true}
+                                    placeholder='isi pengaduan'
+                                    returnKeyType='default' onChangeText={(e) => this.setState({ caption: e })} value={this.state.caption} />
+                            </Form>
+                            {PreviewPict}
+                        </KeyboardAvoidingView>
+                    </ScrollView>
                 </Content>
             </Container>
         );

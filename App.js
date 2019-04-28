@@ -1,23 +1,14 @@
 import React, { Component } from 'react';
-import { Font, AppLoading, ImagePicker, Permissions } from 'expo';
+import { Font, AppLoading, } from 'expo';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Platform, Animated, View, ScrollView, Alert, Dimensions, Text, FlatList, StatusBar } from 'react-native';
-import { Header, Container, Toast, Left, Body, Right, Title, Content, Button, Spinner, Drawer, Icon, H2 } from 'native-base';
+import { Platform, Animated, View, StatusBar } from 'react-native';
+import { Root } from 'native-base';
 import ApiKeys from './config';
 import * as firebase from 'firebase';
-import { createAppContainer, createStackNavigator } from 'react-navigation';
 
 
 //COMPONENTS
-// import SignInPage from './components/Auth/SignInPage';
-// import Feed from './components/LandingLayout/LandingLayout';
-// import InputPengaduan from './components/InputPengaduan/InputPengaduan';
-// import SignUpPage from './components/Auth/SignUpPage';
-// import FillProfilePage from './components/FillProfilePage/FillProfilePage';
-// import HeaderWei from './components/HeaderWei/HeaderWei';
-// import Info from './components/Info/Info';
 import LandingLayout from './components/LandingLayout/LandingLayout';
-// import ProfilePage from './components/ProfilePage/ProfilePage';
 import RootNavigation from './components/RootNavigation';
 
 
@@ -102,12 +93,14 @@ export default class App extends React.Component {
       );
     } else {
       return (
-        <View style={{ flex: 1, backgroundColor: '#fff' }}>
-          {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-          {Platform.OS === 'android' && <View style={{ height: 24, backgroundColor: '#598c5f' }} />}
+        <Root>
+          <View style={{ flex: 1, backgroundColor: '#fff' }}>
+            {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
+            {Platform.OS === 'android' && <View style={{ height: 24, backgroundColor: '#598c5f' }} />}
 
-          {(this.state.isAuthenticated) ? <LandingLayout /> : <RootNavigation />}
-        </View>
+            {(this.state.isAuthenticated) ? <LandingLayout /> : <RootNavigation />}
+          </View>
+        </Root>
       );
     }
   }

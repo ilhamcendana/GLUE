@@ -1,35 +1,39 @@
 import React, { Component } from 'react';
-import { View, Picker, Dimensions, Image, ScrollView, Animated, Easing } from 'react-native';
+import { View, FlatList, RefreshControl, ActivityIndicator, Dimensions, Image, ScrollView, Animated, Easing } from 'react-native';
 import { ImagePicker, Permissions } from 'expo';
-import { Container, Header, Content, Right, Card, CardItem, Input, ListItem, Radio, Textarea, Form, Thumbnail, Text, Button, Icon, Left, Body, Fab, Item } from 'native-base';
+import { Container, Header, Content, Right, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, ActionSheet, Spinner } from 'native-base';
 import Info from '../Info/Info';
-import fire from '../../config';
+import * as firebase from 'firebase';
 import Swiper from 'react-native-swiper';
 import { createAppContainer, createStackNavigator } from 'react-navigation';
+
 import InputPengaduan from '../InputPengaduan/InputPengaduan';
-import InputPengaduanCustomHeader from '../InputPengaduan/InputPengaduanCustomHeader';
 
 class Feed extends Component {
     state = {
+        spinner: false,
+        uid: '',
+        username: '',
         swiperHeaderTitle: 'GLUE',
         isVoteUp: false,
         isVoteDown: false,
-        voteUpValue: 10,
-        voteDownValue: 1,
         trendsInfo: false,
-        selectedKategori: 'INFO',
         translate: new Animated.Value(100),
         selectedTdkpantasReport: false,
         selectedHoaxReport: false,
         openReport: new Animated.Value(-500),
-        postImage: 'empty',
-        inputPost: '',
-        posts: [],
         btnPostDisabled: false,
-        feedAnimation: new Animated.Value(-Dimensions.get('window').width),
+        feedAnimation: new Animated.Value(0),
         welcomePage: new Animated.Value(Dimensions.get('window').height),
         headerAnimation: new Animated.Value(-400),
-        trendAnimated: new Animated.Value(Dimensions.get('window').width)
+        trendAnimated: new Animated.Value(250),
+        //BELOW IS A POST
+        loading: false,
+        refreshing: false,
+        posts: [],
+        previewImagePost: '',
+        clickedActionSheet: null,
+        selectedVoted: ''
     }
 
     static navigationOptions = {
@@ -37,28 +41,53 @@ class Feed extends Component {
     }
 
     componentDidMount() {
-        this.fetchingPost();
         this.welcome();
+        this.setState({ uid: firebase.auth().currentUser.uid })
+        firebase.database().ref(`users/${firebase.auth().currentUser.uid}/profile`).once(('value'), (snap) => this.setState({ username: snap.val().nama }))
+        this.fetchingPost();
     }
 
     fetchingPost = () => {
-        // fire.database().ref('posts').on('value', (snapshot) => {
-        //     const pushing = this.state.posts.push(snapshot.val());
-        //     this.setState({ posts: pushing });
-        // });
-        // console.log(this.state.post);
+        this.setState({ loading: true, posts: [] });
+        const ref = firebase.database().ref('posts/');
+        ref.once('value', (snap) => {
+            const newData = Object.values(snap.val()).reverse();
+            const newPost = newData;
+            this.setState({ posts: newPost, loading: false, refreshing: false });
+        }).catch(() => {
+            this.setState({ loading: false, refreshing: false });
+            alert(err);
+        })
+    };
+
+    onRefreshEvent = () => {
+        this.setState({ refreshing: true }, () => this.fetchingPost())
+    };
+
+    updatingPostEvent = () => {
+        const ref = firebase.database().ref('posts/');
+        ref.once('value', (snap) => {
+            const newData = Object.values(snap.val()).reverse();
+            const newPost = newData;
+            this.setState({ posts: newPost, loading: false, refreshing: false, spinner: false });
+        }).catch(() => {
+            this.setState({ loading: false, refreshing: false });
+            alert(err);
+        })
     }
 
     feedAnimation = () => {
         Animated.timing(this.state.feedAnimation, {
-            toValue: 0,
+            toValue: 1,
             duration: 800
         }).start();
+    };
 
+    headerAnimation = () => {
         Animated.timing(this.state.headerAnimation, {
             toValue: 0,
             duration: 800
-        }).start();
+        }).start(() => this.feedAnimation());
     };
 
     welcome = () => {
@@ -74,7 +103,7 @@ class Feed extends Component {
             toValue: screenHeight,
             duration: 500,
             delay: 1000
-        }).start(() => this.feedAnimation())
+        }).start(() => this.headerAnimation())
     };
 
     trendAnimated = () => {
@@ -89,184 +118,38 @@ class Feed extends Component {
     closeTrendAnimation = () => {
         const screenWidth = Dimensions.get('window').width;
         Animated.timing(this.state.trendAnimated, {
-            toValue: screenWidth,
+            toValue: 250,
             duration: 500,
             delay: 1000
         }).start(() => this.setState({ trendsInfo: false }));
     };
 
-    voteUp = () => {
-        if (this.state.isVoteUp === false && this.state.isVoteDown === false) {
-            this.setState({ isVoteUp: true, voteUpValue: this.state.voteUpValue + 1 });
-        } else if (this.state.isVoteUp === true && this.state.isVoteDown === false) {
-            this.setState({ isVoteUp: false, voteUpValue: this.state.voteUpValue - 1 });
-        } else if (this.state.isVoteUp === false && this.state.isVoteDown === true) {
-            this.setState({ isVoteUp: true, isVoteDown: false, voteUpValue: this.state.voteUpValue + 1, voteDownValue: this.state.voteDownValue - 1 });
-        }
+    voteUp = (e) => {
+        console.log(e);
     }
 
-    voteDown = () => {
-        if (this.state.isVoteUp === false && this.state.isVoteDown === false) {
-            this.setState({ isVoteDown: true, voteDownValue: this.state.voteDownValue + 1 });
-        } else if (this.state.isVoteUp === false && this.state.isVoteDown === true) {
-            this.setState({ isVoteDown: false, voteDownValue: this.state.voteDownValue - 1 });
-        } else if (this.state.isVoteUp === true && this.state.isVoteDown === false) {
-            this.setState({ isVoteUp: false, isVoteDown: true, voteDownValue: this.state.voteDownValue + 1, voteUpValue: this.state.voteUpValue - 1 });
-        }
+    openPreviewImagePost = () => {
+        alert('ee')
     }
-
-
-    InputChangePost = (e) => {
-        this.setState({ inputPost: e })
-    }
-
-    // IMAGE FROM PHONE EVENT POST
-    PickImagePost = async () => {
-        await Permissions.askAsync(Permissions.CAMERA_ROLL);
-        let result = await ImagePicker.launchImageLibraryAsync({
-            allowsEditing: true,
-            aspect: [4, 3],
-        });
-        if (!result.cancelled) {
-            this.setState({ postImage: resultCamera.uri });
-            // const response = await fetch(result.uri);
-            // const blob = await response.blob();
-            // let ref = fire.storage().ref('users/' + uid + '/profilePict/').child("profilePict");
-            // return ref.put(blob).then(() => {
-            //   this.setState({ profilePictCondition: 'Uploaded!!!' });
-            // }).catch((error) => {
-            //   this.setState({ profilePictCondition: 'Upload error' });
-            // });
-        }
-    }
-
-    TakeImagePost = async () => {
-        await Permissions.askAsync(Permissions.CAMERA);
-        let resultCamera = await ImagePicker.launchCameraAsync({
-            allowsEditing: false
-        });
-        if (!resultCamera.cancelled) {
-            this.setState({ postImage: resultCamera.uri });
-            // const response = await fetch(resultCamera.uri);
-            // const blob = await response.blob();
-            // let ref = fire.storage().ref('users/' + uid + '/profilePict/').child("profilePict");
-            // return ref.put(blob).then(() => {
-            //   this.setState({ profilePictCondition: 'Uploaded!!!' });
-            // }).catch((error) => {
-            //   this.setState({ profilePictCondition: 'Upload error' });
-            // });
-        };
-    };
-
-    //END IMAGE FROM PHONE EVENT POST------------------------------
-
-
-    //SEND POST TO DATABASE
-    sendpost = () => {
-        this.setState({ btnPostDisabled: true });
-        const { inputPost, selectedKategori } = this.state;
-        const uid = this.props.uid;
-        let today = new Date();
-        let dd = today.getDate();
-        let mm = today.getMonth() + 1; //January is 0!
-        let yyyy = today.getFullYear();
-
-        if (dd < 10) {
-            dd = '0' + dd
-        }
-
-        if (mm < 10) {
-            mm = '0' + mm
-        }
-
-        let todayDate = mm + '-' + dd + '-' + yyyy;
-        const postData = {
-            caption: inputPost,
-            category: selectedKategori,
-            date: todayDate,
-            name: fire.database().ref('users' + fire.auth().currentUser.uid + '/profile/nama'),
-            totalUp: null,
-            totalDown: null,
-            totalComment: null,
-            totalReport: null,
-            isTrend: false,
-            isReported: false
-        }
-        let newPostKey = fire.database().ref().child('posts').push().key;
-        let updates = {};
-        updates['/posts/' + newPostKey] = postData;
-        updates['/users/' + uid + '/posts/' + newPostKey] = postData;
-        return fire.database().ref().update(updates).then(() => this.setState({ btnPostDisabled: false }));
-    };
-    //END SEND POST TO DATABASE----------
 
     render() {
         const screenWidth = Dimensions.get('window').width;
         const screenHeight = Dimensions.get('window').height;
-        const voteColorUp = this.state.isVoteUp ? { color: '#22d62b' } : { color: '#660066' };
-        const voteColorDown = this.state.isVoteDown ? { color: '#f2101c' } : { color: '#660066' };
+        const voteColorUp = this.state.isVoteUp ? { color: '#22d62b' } : { color: '#333' };
+        var BUTTONS = ["Lapor", "Hapus Post", "Kembali"];
+        var DESTRUCTIVE_INDEX = 1;
+        var CANCEL_INDEX = 2;
+        if (this.state.clickedActionSheet === 0) {
+            alert('lapor')
+        };
 
-        const CardFeed = (
-            <Animated.View style={{ translateX: this.state.feedAnimation }}>
-                <Card style={{ borderRadius: 20, borderWidth: 5, }}>
-                    <CardItem bordered header style={{ borderRadius: 20 }}>
-                        <Left>
-                            <Thumbnail source={require('../../assets/ProfileIcon.png')} />
-                            <Body>
-                                <Text>Ilham Cendana</Text>
-                                <Text note>April 15, 2019</Text>
-                            </Body>
-                            <Right>
-                                <Button transparent onPress={() => this.trendAnimated()}>
-                                    <Icon type='Ionicons' name={this.state.trendsInfo ? 'star' : 'star-outline'} style={{ color: '#598c5f' }} />
-                                </Button>
-                            </Right>
-                        </Left>
-                    </CardItem>
-                    <CardItem>
-                        <Body>
-                            <Image source={{ uri: 'https://placeimg.com/740/580/tech' }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
-                            <Text>
-                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Libero recusandae, reprehenderit, delectus itaque inventore, reiciendis est ratione repellat facere cupiditate assumenda harum quae ducimus quibusdam. Ex, fugit! A, rem quo.
-                                            </Text>
-                        </Body>
-                    </CardItem>
-                    <CardItem bordered style={{ borderRadius: 20 }}>
-                        <Left>
-                            <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteUp}>
-                                <Icon name="arrow-up-circle" type='Feather'
-                                    style={voteColorUp} /><Text style={voteColorUp}>{this.state.voteUpValue}</Text>
-
-                            </Button>
-
-                            <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteDown}>
-                                <Icon name="arrow-down-circle" type='Feather'
-                                    style={voteColorDown} /><Text style={voteColorDown}>{this.state.voteDownValue}</Text>
-                            </Button>
-
-                            <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.animated()}>
-                                <Icon name="chatbubbles" style={{ color: '#660066' }} /><Text style={{ color: '#660066' }}>123</Text>
-                            </Button>
-                        </Left>
-
-                        <Body></Body>
-
-                        <Right>
-                            <Button transparent style={{ justifyContent: 'center', width: 40 }} onPress={() => this.openReport()}>
-                                <Icon name="alert" type='Ionicons' style={{ color: '#660066' }} />
-                            </Button>
-                        </Right>
-                    </CardItem>
-                </Card>
-            </Animated.View>
-        );
         return (
             <>
                 <Animated.View style={{ translateY: this.state.welcomePage, zIndex: 100, position: 'absolute', justifyContent: 'center', alignItems: 'center', width: Dimensions.get('window').width, height: Dimensions.get('window').height, backgroundColor: '#598c5f' }}>
                     <Text style={{ fontWeight: '100', fontSize: 55, color: '#fff' }}>WELCOME</Text>
                 </Animated.View>
 
-                <Animated.View style={{ position: 'absolute', zIndex: 150, translateY: screenHeight / 2, translateX: this.state.trendAnimated, backgroundColor: '#598c5f', paddingVertical: 15, width: screenWidth }}>
+                <Animated.View style={{ position: 'absolute', zIndex: 150, bottom: 0, translateY: this.state.trendAnimated, backgroundColor: '#598c5f', paddingVertical: 15, width: screenWidth }}>
                     <Text style={{ textAlign: 'center', color: '#fff', fontWeight: 'bold' }}>This post is trend</Text>
                 </Animated.View>
 
@@ -285,24 +168,120 @@ class Feed extends Component {
                         </Right>
                     </Header>
                 </Animated.View>
+
+                {this.state.spinner ? <Spinner size='large' color='#598c5f' style={{ position: 'absolute', zIndex: 100, alignSelf: 'center', top: 55 }} /> : null}
+
                 <Swiper loop={false} showsPagination={false}
                     index={0}
                     bounces={true}
                     onIndexChanged={(e) => e === 1 ? this.setState({ swiperHeaderTitle: 'TRENDS' }) : this.setState({ swiperHeaderTitle: 'GLUE' })}>
                     <Container>
-                        <Content padder>
-                            <ScrollView>
-                                {CardFeed}
-                                {CardFeed}
-                                {CardFeed}
-                                {CardFeed}
-                                {CardFeed}
-                                {CardFeed}
-                            </ScrollView>
+                        <ScrollView
+                            refreshControl={
+                                <RefreshControl
+                                    refreshing={this.state.refreshing}
+                                    onRefresh={this.onRefreshEvent}
+                                />
+                            }
+                        >
+                            {this.state.posts.map(item => (
+                                <Animated.View style={{ opacity: this.state.feedAnimation }} key={item.key}>
+                                    <Content padder>
+                                        <Card style={{ borderRadius: 20, borderWidth: 5, }}>
+                                            <CardItem bordered header style={{ borderRadius: 20 }}>
+                                                <Left>
+                                                    <Thumbnail source={require('../../assets/ProfileIcon.png')} />
+                                                    <Body>
+                                                        <Text>{item.username}</Text>
+                                                        <Text note>{item.date.todayDate}</Text>
+                                                    </Body>
+                                                    <Right>
+                                                        <View style={{ justifyContent: 'space-between' }}>
+                                                            <Button transparent onPress={() =>
+                                                                ActionSheet.show(
+                                                                    {
+                                                                        options: BUTTONS,
+                                                                        cancelButtonIndex: CANCEL_INDEX,
+                                                                        destructiveButtonIndex: DESTRUCTIVE_INDEX,
+                                                                    },
+                                                                    buttonIndex => {
+                                                                        this.setState({ clickedActionSheet: BUTTONS[buttonIndex] });
+                                                                    }
+                                                                )}>
+                                                                <Icon type='Feather' name='chevron-down'
+                                                                    style={{ color: '#598c5f' }} />
+                                                            </Button>
+                                                            <Text note>{item.date.todayTime}</Text>
+                                                        </View>
+                                                    </Right>
+                                                </Left>
+                                            </CardItem>
+                                            <CardItem>
+                                                <Body>
+                                                    {item.postPict !== '' ?
+                                                        <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
+                                                        :
+                                                        null}
+                                                    <Text>{item.caption}</Text>
+                                                </Body>
+                                            </CardItem>
+                                            <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
+                                                <View style={{ flexDirection: 'row' }}>
+                                                    <Left>
 
-                        </Content>
+                                                    </Left>
 
-                        {/* WRITE POST BUTTON */}
+                                                    <Body>
+                                                        <Button transparent style={{ justifyContent: 'center' }}
+                                                            onPress={() => {
+                                                                this.setState({ spinner: true });
+                                                                firebase.database().ref('posts/' + item.key + '/postInfo/').set({
+                                                                    totalUpVote: item.postInfo.totalUpVote + 1,
+                                                                    isTrend: item.postInfo.isTrend,
+                                                                    totalRepor: item.postInfo.totalRepor,
+                                                                });
+                                                                let likeData = {
+                                                                    uid: this.state.uid,
+                                                                    username: this.state.username
+                                                                }
+                                                                let updates = {};
+                                                                updates['posts/' + item.key + '/postInfo/userWhoLiked/' + this.state.uid] = likeData;
+                                                                firebase.database().ref().update(updates)
+                                                                    .then(() => this.updatingPostEvent(item.key))
+                                                            }}>
+                                                            <Icon name="arrow-up-circle" type='Feather'
+                                                                style={
+                                                                    //fix this shit man
+                                                                    firebase.database().ref('posts/' + item.key + '/postInfo/userWhoLiked/' + firebase.auth().currentUser.uid).on('value', snap => snap.val().uid)
+                                                                }
+                                                            />
+                                                            <Text style={this.state.selectedVoted === item.key ? { color: '#22d62b' } : { color: '#333' }}>
+                                                                {item.postInfo.totalUpVote} Vote</Text>
+                                                        </Button>
+                                                    </Body>
+
+                                                    <Right>
+                                                    </Right>
+                                                </View>
+                                                <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                    <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.animated()}>
+                                                        <Text style={{ color: '#598c5f', fontSize: 10 }}>21 Comments</Text>
+                                                    </Button>
+                                                    {item.isTrend ?
+                                                        <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
+                                                            <Icon type='Ionicons' name='star'
+                                                                style={{ color: '#fff' }} />
+                                                        </Button>
+                                                        : null}
+                                                </View>
+                                            </CardItem>
+                                        </Card>
+                                    </Content>
+                                </Animated.View>
+                            ))}
+                        </ScrollView>
+
+                        {/* CREATE POST BUTTON */}
                         <Button onPress={() => this.props.navigation.navigate('CreatePostComponent')}
                             style={{ position: 'absolute', bottom: 20, right: 20, width: 56, height: 56, borderRadius: 56 / 2, backgroundColor: '#598c5f' }}>
                             <Icon type='Feather' name='plus-circle' />
