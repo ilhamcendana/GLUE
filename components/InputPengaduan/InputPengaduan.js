@@ -3,6 +3,7 @@ import { View, Dimensions, Animated, KeyboardAvoidingView } from 'react-native';
 import { Spinner, Form, Textarea, Input, Item, Content, Icon, Left, Right, Button, Text, Toast, Header, Body, Thumbnail, Container } from 'native-base';
 import { ImagePicker, Permissions } from 'expo';
 import * as firebase from 'firebase';
+import 'firebase/firestore';
 import { ScrollView } from 'react-native-gesture-handler';
 
 
@@ -14,25 +15,26 @@ export default class InputPengaduan extends Component {
         postedAnim: new Animated.Value(0),
         success: false,
         caption: '',
+        disablePostButton: false,
         username: '',
-        disablePostButton: false
+        uid: '',
+        profilePictUrl: ''
     }
 
     componentDidMount() {
-        firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile')
-            .on('value', (snapshot) => {
-                this.setState({
-                    username: snapshot.val().nama
-                })
-            });
+        const { displayName, uid, photoURL } = firebase.auth().currentUser;
+        this.setState({
+            username: displayName,
+            uid: uid,
+            profilePictUrl: photoURL
+        })
     }
 
 
     postedAnim = () => {
         Animated.timing(this.state.postedAnim, {
             toValue: 1,
-            duration: 500,
-            delay: 150
+            duration: 200,
         }).start(() => {
             this.postedClosedAnim();
         })
@@ -114,82 +116,71 @@ export default class InputPengaduan extends Component {
         const month = date.getMonth();
         const todayDate = date.getDate() + '-' + monthName[month] + '-' + date.getFullYear();
         const todayTime = date.getHours() + ':' + date.getMinutes();
+        const mergeDate = `${date.getFullYear()}${(date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1)}${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}${date.getHours() < 10 ? '0' + date.getHours() : date.getHours()}${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}${date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()}`;
         if (this.state.postPict !== '') {
             this.uploadProfilPict(this.state.postPict)
                 .then(() => {
-                    // A post entry.
-                    const uid = firebase.auth().currentUser.uid;
-                    // Get a key for a new Post.
-                    let newPostKey = firebase.database().ref().child('posts').push().key;
-                    let postData = {
-                        username: this.state.username,
+                    const { username, uid, caption, postPictUrl, profilePictUrl } = this.state;
+                    firebase.firestore().collection("posts").add({
+                        name: username,
                         uid: uid,
-                        caption: this.state.caption,
-                        postPict: this.state.postPictUrl,
+                        caption: caption,
+                        postPict: postPictUrl,
+                        profilePict: profilePictUrl,
                         postInfo: {
                             totalUpVote: 0,
-                            totalDownVote: 0,
-                            totalRepor: 0,
+                            totalReported: 0,
                             isTrend: false,
+                            totalComments: 0
                         },
-                        date: {
-                            todayDate: todayDate,
-                            todayTime: todayTime,
-                        },
-                        key: newPostKey
-                    };
-
-                    // Write the new post's data simultaneously in the posts list and the user's post list.
-                    let updates = {};
-                    updates['posts/' + newPostKey] = postData;
-                    updates['users/' + uid + '/posts/' + '/' + newPostKey] = postData;
-
-                    firebase.database().ref().update(updates);
-                }).then(() => {
-                    this.setState({ success: true, spinner: false });
-                    this.postedAnim();
+                        userWhoLiked: {},
+                        todayDate: todayDate,
+                        todayTime: todayTime,
+                        mergeDate: mergeDate
+                    }).then((docRef) => {
+                        firebase.firestore().collection('posts').doc(docRef.id).set({ key: docRef.id }, { merge: true });
+                        this.setState({ success: true, spinner: false });
+                        this.postedAnim();
+                    }).catch((err) => {
+                        alert.alert(err);
+                        this.setState({ disablePostButton: false });
+                        console.log(err)
+                    });
                 })
-                .catch((err) => console.log(err));
         } else {
-            // A post entry.
-            const uid = firebase.auth().currentUser.uid;
-            // Get a key for a new Post.
-            let newPostKey = firebase.database().ref().child('posts').push().key;
-            let postData = {
-                username: this.state.username,
+            const { username, uid, caption, postPictUrl, profilePictUrl } = this.state;
+            firebase.firestore().collection("posts").add({
+                name: username,
                 uid: uid,
-                caption: this.state.caption,
-                postPict: this.state.postPictUrl,
+                caption: caption,
+                postPict: postPictUrl,
+                profilePict: profilePictUrl,
                 postInfo: {
                     totalUpVote: 0,
-                    totalDownVote: 0,
-                    totalRepor: 0,
+                    totalReported: 0,
                     isTrend: false,
+                    totalComments: 0
                 },
-                date: {
-                    todayDate: todayDate,
-                    todayTime: todayTime,
-                },
-                key: newPostKey
-            };
-
-
-            // Write the new post's data simultaneously in the posts list and the user's post list.
-            let updates = {};
-            updates['posts/' + newPostKey] = postData;
-            updates['users/' + uid + '/posts/' + '/' + newPostKey] = postData;
-
-            firebase.database().ref().update(updates).then(() => {
-                this.setState({ success: true, spinner: false, disablePostButton: false });
+                userWhoLiked: {},
+                todayDate: todayDate,
+                todayTime: todayTime,
+                mergeDate: mergeDate,
+                key: ''
+            }).then((docRef) => {
+                firebase.firestore().collection('posts').doc(docRef.id).set({ key: docRef.id }, { merge: true });
+                this.setState({ success: true, spinner: false });
                 this.postedAnim();
-            })
-                .catch((err) => console.log(err));
+            }).catch((err) => {
+                alert.alert(err);
+                this.setState({ disablePostButton: false });
+                console.log(err)
+            });
         }
-
     }
     render() {
         const screenWidth = Dimensions.get('window').width;
         const screenHeight = Dimensions.get('window').height;
+
 
         const spinner = this.state.spinner ? (
             <View style={{ width: screenWidth, alignItems: 'center', position: 'absolute', zIndex: 100, }}>
@@ -222,7 +213,7 @@ export default class InputPengaduan extends Component {
                         <Button rounded small
                             disabled={this.state.disablePostButton}
                             onPress={this.POSTING}
-                            style={{ backgroundColor: '#fff', alignItems: 'center' }}>
+                            style={this.state.caption === '' || this.state.disablePostButton ? { backgroundColor: '#333', color: '#fff', alignItems: 'center' } : { backgroundColor: '#fff', alignItems: 'center' }}>
                             <Text style={{ color: '#598c5f' }}>Post</Text>
                         </Button>
                     </Right>

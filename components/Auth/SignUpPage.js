@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, KeyboardAvoidingView, Dimensions } from 'react-native';
+import { View, KeyboardAvoidingView, Dimensions, Alert } from 'react-native';
 import {
     Container,
     Content,
@@ -10,14 +10,11 @@ import {
     Text,
     Label,
     Spinner,
-    H1,
     Picker,
     Icon,
-    Thumbnail
 } from 'native-base';
 import * as firebase from 'firebase';
-
-
+import 'firebase/firestore';
 
 export default class SignUpPage extends Component {
     state = {
@@ -49,16 +46,16 @@ export default class SignUpPage extends Component {
 
     inputNamaProfileEvent = e => {
         this.setState({ inputNamaProfile: e });
-    }
+    };
     inputKelasProfileEvent = e => {
         this.setState({ inputKelasProfile: e });
-    }
+    };
     inputNPMProfileEvent = e => {
         this.setState({ inputNPMProfile: e });
-    }
+    };
     inputJurusanProfileEvent = e => {
         this.setState({ inputJurusanProfile: e });
-    }
+    };
 
     signupEvent = () => {
         const { signupEmailValue, signupRePassValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
@@ -69,37 +66,41 @@ export default class SignUpPage extends Component {
         } else {
             firebase.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue)
                 .then(() => {
-                    firebase.auth().currentUser.sendEmailVerification().then(function () {
-                        alert('an email verification has been sent to your email address');
-                    }).catch(function (error) {
+                    firebase.auth().currentUser.sendEmailVerification().then(() => {
+                        firebase.auth().currentUser.updateProfile({
+                            displayName: inputNamaProfile,
+                            photoURL: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c'
+                        });
+                        const userData = {
+                            nama: inputNamaProfile,
+                            profilePict: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c',
+                            npm: inputNPMProfile,
+                            kelas: inputKelasProfile,
+                            jurusan: inputJurusanProfile,
+                            totalPost: 0,
+                            totalVote: 0,
+                            totalTrends: 0,
+                            isVerified: false
+                        }
+
+                        firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).set({
+                            profile: userData
+                        }).then(() => {
+                            this.setState({
+                                inputNamaProfile: '',
+                                inputKelasProfile: '',
+                                inputNPMProfile: '',
+                                inputJurusanProfile: '',
+                                signupEmailValue: '',
+                                signupPassValue: '',
+                                spinner: false,
+                            });
+                        });
+                        Alert.alert('an email verification has been sent to your email address');
+                    }).catch((error) => {
                         alert(error);
                         this.setState({ spinner: false });
                     });
-
-                    firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile/').set({
-                        email: signupEmailValue,
-                        nama: inputNamaProfile,
-                        npm: inputNPMProfile,
-                        kelas: inputKelasProfile,
-                        jurusan: inputJurusanProfile,
-                        profilPictUrl: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c',
-                        totalPost: 0,
-                        totalVote: 0,
-                        totalTrends: 0,
-                        isVerified: false
-                    });
-
-                    this.setState({
-                        inputNamaProfile: '',
-                        inputKelasProfile: '',
-                        inputNPMProfile: '',
-                        inputJurusanProfile: '',
-                        signupEmailValue: '',
-                        signupPassValue: '',
-                        spinner: false,
-                    })
-
-
                 })
         }
     }
@@ -121,7 +122,7 @@ export default class SignUpPage extends Component {
                         top: 40,
                         backgroundColor: '#fff'
                     }}>
-                        <Spinner color='#660066' />
+                        <Spinner color='#598c5f' />
                     </View>
                 ) : null}
                 <Content style={{
@@ -137,18 +138,6 @@ export default class SignUpPage extends Component {
                         }}>Buat akun</Text>
 
                         <KeyboardAvoidingView behavior="padding" enabled>
-                            {/* <View style={{ width: '100%', alignItems: 'center', marginVertical: 40 }}>
-                            <Thumbnail source={props.image ? { uri: props.image } : require('../../assets/ProfileIcon.png')} large />
-                        </View>
-                        <View style={{ width: screenWidth, flexDirection: 'row', justifyContent: 'space-around', }}>
-                            <Button style={{ backgroundColor: '#660066' }} rounded onPress={props._takeImage}>
-                                <Text style={{ color: '#fff' }}>Camera</Text>
-                            </Button>
-                            <Button style={{ backgroundColor: '#660066' }} rounded onPress={props._pickImage}>
-                                <Text style={{ color: '#fff' }}>gallery</Text>
-                            </Button>
-                        </View> */}
-
                             <Form style={{
                                 padding: 20,
                                 flex: 1,
@@ -156,7 +145,7 @@ export default class SignUpPage extends Component {
                             }}>
 
 
-                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Email</Label>
                                     <Input
                                         autoCapitalize='none'
@@ -165,7 +154,7 @@ export default class SignUpPage extends Component {
                                         onChangeText={this.signupEmailValChange}
                                         value={this.state.signupEmailValue} />
                                 </Item>
-                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Password atleast 6 characters</Label>
                                     <Input
                                         returnKeyType='done'
@@ -176,7 +165,7 @@ export default class SignUpPage extends Component {
                                     />
                                 </Item>
 
-                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Re-enter Password</Label>
                                     <Input
                                         returnKeyType='done'
@@ -187,13 +176,13 @@ export default class SignUpPage extends Component {
                                     />
                                 </Item>
 
-                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Nama</Label>
                                     <Input
                                         onChangeText={this.inputNamaProfileEvent}
                                         value={this.state.inputNamaProfile} />
                                 </Item>
-                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>NPM</Label>
                                     <Input
                                         onChangeText={this.inputNPMProfileEvent}
@@ -201,7 +190,7 @@ export default class SignUpPage extends Component {
                                         autoCapitalize='none'
                                         keyboardType='number-pad' />
                                 </Item>
-                                <Item floatingLabel style={{ borderColor: '#660066', paddingBottom: 10 }}>
+                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Kelas</Label>
                                     <Input
                                         onChangeText={this.inputKelasProfileEvent}
@@ -210,7 +199,7 @@ export default class SignUpPage extends Component {
 
                                     />
                                 </Item>
-                                <Item style={{ marginTop: 10 }}>
+                                <Item style={{ marginTop: 10, borderColor: '#598c5f' }}>
                                     <Picker
                                         note={this.state.inputJurusanProfile === '' ? true : false}
                                         placeholder='Pilih Jurusan'
@@ -228,7 +217,7 @@ export default class SignUpPage extends Component {
                                 <Button block rounded onPress={this.signupEvent}
                                     style={{
                                         marginTop: 40,
-                                        backgroundColor: '#640164',
+                                        backgroundColor: '#598c5f',
                                         alignSelf: 'center',
                                         width: 150,
                                         display: 'flex',
@@ -239,8 +228,8 @@ export default class SignUpPage extends Component {
                                 <Text style={{ textAlign: 'center', marginVertical: 15 }}>Sudah punya akun ?</Text>
                                 <Button
                                     rounded
-                                    style={{ borderColor: '#660066', width: 150, borderWidth: 1, display: 'flex', justifyContent: 'center', backgroundColor: 'none', alignSelf: 'center' }}
-                                    bordered onPress={() => this.props.navigation.navigate('Login')} block><Text style={{ color: '#640164' }}>Masuk</Text></Button>
+                                    style={{ borderColor: '#598c5f', width: 150, borderWidth: 1, display: 'flex', justifyContent: 'center', backgroundColor: 'none', alignSelf: 'center' }}
+                                    bordered onPress={() => this.props.navigation.navigate('Login')} block><Text style={{ color: '#598c5f' }}>Masuk</Text></Button>
                             </Form>
                         </KeyboardAvoidingView>
                     </View>

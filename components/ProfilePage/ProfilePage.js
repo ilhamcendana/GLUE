@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { View, Dimensions, ScrollView, FlatList, ActivityIndicator, Image, RefreshControl } from 'react-native';
 import { Thumbnail, Text, Button, Icon, Content, Header, CardItem, Container, Left, Body, Right, Card } from 'native-base';
 import * as firebase from 'firebase';
+import 'firebase/firestore';
 import Swiper from 'react-native-swiper';
 
 
@@ -24,7 +25,6 @@ class ProfilePage extends Component {
             posts: [],
             loading: false,
             refreshing: false,
-            page: 2
         }
     }
 
@@ -38,40 +38,62 @@ class ProfilePage extends Component {
     }
 
     fetchProfileData = () => {
-        firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/profile').on('value', (snapshot) => {
+        const db = firebase.firestore();
+        const { displayName, photoURL } = firebase.auth().currentUser;
+        db.collection('users').doc(firebase.auth().currentUser.uid).get().then((snap => {
             this.setState({
-                namaUser: snapshot.val().nama,
-                kelasUser: snapshot.val().kelas,
-                npmUser: snapshot.val().npm,
-                jurusanUser: snapshot.val().jurusan,
-                profilPictUrl: snapshot.val().profilPictUrl,
-                totalPost: snapshot.val().totalPost,
-                totalTrends: snapshot.val().totalTrends,
-                totalVote: snapshot.val().totalVote
+                kelasUser: snap.data().profile.kelas,
+                npmUser: snap.data().profile.npm,
+                jurusanUser: snap.data().profile.jurusan,
+                totalPost: snap.data().profile.totalPost,
+                totalTrends: snap.data().profile.totalTrends,
+                totalVote: snap.data().profile.totalVote,
+                namaUser: displayName,
+                profilPictUrl: photoURL
             });
-        });
+        }));
     };
 
     fetchingProfilePosts = () => {
+        const { uid } = firebase.auth().currentUser;
         this.setState({ loading: true, posts: [] });
-        const ref = firebase.database().ref('users/' + firebase.auth().currentUser.uid + '/posts');
-        ref.once('value', (snap) => {
-            if (snap.val() === null) {
-                this.setState({ posts: null, refreshing: false, loading: false });
-            } else {
-                const newData = Object.values(snap.val()).reverse();
-                const newPost = newData;
-                this.setState({ posts: newPost, loading: false, refreshing: false });
-            }
+        const ref = firebase.firestore().collection('posts').where('uid', '==', uid).orderBy('mergeDate').get();
+        const data = [];
+        ref.then(snap => {
+            snap.forEach((doc) => {
+                data.push(doc.data());
+            });
+            data.reverse();
         })
+            .then(() => {
+                if (data.length == 0) {
+                    this.setState({ posts: 'empty', loading: false, refreshing: false });
+                } else {
+                    this.setState({ posts: data, loading: false, refreshing: false });
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                this.setState({ loading: false, refreshing: false })
+            });
     }
 
 
     onRefreshEvent = () => {
-        this.setState({ refreshing: true }, () => this.fetchingProfilePosts())
+        this.setState({ refreshing: true }, () => {
+            this.fetchProfileData();
+            this.fetchingProfilePosts();
+        })
     }
 
-
+    footerComponent = () => {
+        if (!this.state.loading) return null;
+        return (
+            <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator size='large' animating />
+            </View>
+        )
+    }
 
     render() {
         let screenWidth = Dimensions.get('window').width;
@@ -160,70 +182,99 @@ class ProfilePage extends Component {
                                 </View>
                             </View>
 
-                            {this.state.posts !== null ? this.state.posts.map(item => (
-                                <Content padder key={item.key}>
-                                    <Card style={{ borderRadius: 20, borderWidth: 5, }}>
-                                        <CardItem bordered header style={{ borderRadius: 20 }}>
-                                            <Left>
-                                                <Thumbnail source={require('../../assets/ProfileIcon.png')} />
-                                                <Body>
-                                                    <Text>{item.username}</Text>
-                                                    <Text note>{item.date.todayDate}</Text>
-                                                </Body>
-                                                <Right>
-                                                    <View style={{ justifyContent: 'space-between' }}>
-                                                        <Button transparent>
-                                                            <Icon type='Feather' name='more-horizontal'
-                                                                style={{ color: '#598c5f' }} />
-                                                        </Button>
-                                                        <Text note>{item.date.todayTime}</Text>
-                                                    </View>
-                                                </Right>
-                                            </Left>
-                                        </CardItem>
-                                        <CardItem>
-                                            <Body>
-                                                {item.postPict !== '' ?
-                                                    <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
-                                                    :
-                                                    null}
-                                                <Text>{item.caption}</Text>
-                                            </Body>
-                                        </CardItem>
-                                        <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
-                                            <View style={{ flexDirection: 'row' }}>
-                                                <Left>
-
-                                                </Left>
-
-                                                <Body>
-                                                    <Button transparent style={{ justifyContent: 'center' }} onPress={this.voteUp}>
-                                                        <Icon name="arrow-up-circle" type='Feather'
-                                                        /><Text >{item.postInfo.totalUpVote} Vote</Text>
-                                                    </Button>
-                                                </Body>
-
-                                                <Right>
-                                                </Right>
-                                            </View>
-                                            <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.animated()}>
-                                                    <Text style={{ color: '#598c5f', fontSize: 10 }}>21 Comments</Text>
-                                                </Button>
-                                                {item.isTrend ?
-                                                    <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
-                                                        <Icon type='Ionicons' name='star'
-                                                            style={{ color: '#fff' }} />
-                                                    </Button>
-                                                    : null}
-                                            </View>
-                                        </CardItem>
-                                    </Card>
-                                </Content>
-                            )) : <View style={{ width: screenWidth, paddingVertical: 15, justifyContent: 'center', alignItems: 'center' }}>
+                            {this.state.posts === 'empty' ? (
+                                <View style={{ width: screenWidth, paddingVertical: 15, paddingHorizontal: 10, justifyContent: 'center', alignItems: 'center' }}>
                                     <Text style={{ fontWeight: 'bold' }}>Anda belum mempunyai post</Text>
                                     <Text style={{ textAlign: 'center' }}>Buat post dengan cara ke halaman beranda lalu ketuk tombol dengan icon tambah di bawah kanan layar anda</Text>
-                                </View>}
+                                </View>
+                            ) : (
+
+                                    <FlatList
+                                        data={this.state.posts}
+                                        refreshing={this.state.refreshing}
+                                        onRefresh={this.onRefreshEvent}
+                                        ListFooterComponent={this.footerComponent}
+                                        renderItem={({ item }) => (
+                                            <Content padder>
+                                                <Card style={{ borderRadius: 20, borderWidth: 5, }} key={item.key}>
+                                                    <CardItem bordered header style={{ borderRadius: 20 }}>
+                                                        <Left>
+                                                            <Thumbnail source={{ uri: firebase.auth().currentUser.photoURL }} />
+                                                            <Body>
+                                                                <Text>{item.nama}</Text>
+                                                                <Text note>{item.todayDate}</Text>
+                                                            </Body>
+                                                            <Right>
+                                                                <View style={{ justifyContent: 'space-between' }}>
+                                                                    <Button transparent onPress={() =>
+                                                                        ActionSheet.show(
+                                                                            {
+                                                                                options: BUTTONS,
+                                                                                cancelButtonIndex: CANCEL_INDEX,
+                                                                                destructiveButtonIndex: DESTRUCTIVE_INDEX,
+                                                                            },
+                                                                            buttonIndex => {
+                                                                                this.setState({ clickedActionSheet: BUTTONS[buttonIndex] });
+                                                                            }
+                                                                        )}>
+                                                                        <Icon type='Feather' name='chevron-down'
+                                                                            style={{ color: '#598c5f' }} />
+                                                                    </Button>
+                                                                    <Text note>{item.todayTime}</Text>
+                                                                </View>
+                                                            </Right>
+                                                        </Left>
+                                                    </CardItem>
+                                                    <CardItem>
+                                                        <Body>
+                                                            {item.postPict !== '' ?
+                                                                <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
+                                                                :
+                                                                null}
+                                                            <Text>{item.caption}</Text>
+                                                        </Body>
+                                                    </CardItem>
+                                                    <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
+                                                        <View style={{ flexDirection: 'row' }}>
+                                                            <Left>
+
+                                                            </Left>
+
+                                                            <Body>
+                                                                <Button transparent style={{ justifyContent: 'center' }}
+                                                                    onPress={() => {
+                                                                        this.setState({ spinner: true });
+
+                                                                    }}>
+                                                                    <Icon name="arrow-up-circle" type='Feather'
+
+                                                                    />
+                                                                    <Text >
+                                                                        {item.postInfo.totalUpVote} Vote</Text>
+                                                                </Button>
+                                                            </Body>
+
+                                                            <Right>
+                                                            </Right>
+                                                        </View>
+                                                        <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                            <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.props.navi}>
+                                                                <Text style={{ color: '#598c5f', fontSize: 10 }}>21 Comments</Text>
+                                                            </Button>
+                                                            {item.isTrend ?
+                                                                <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
+                                                                    <Icon type='Ionicons' name='star'
+                                                                        style={{ color: '#fff' }} />
+                                                                </Button>
+                                                                : null}
+                                                        </View>
+                                                    </CardItem>
+                                                </Card>
+                                            </Content>
+                                        )}
+                                    />
+                                )}
+
                         </ScrollView>
                     </Container>
 

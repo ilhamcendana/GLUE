@@ -50,7 +50,7 @@ class SignInPage extends Component {
         firebase.auth().signInWithEmailAndPassword(signEmailValue, signPassValue)
             .then(() => {
                 if (firebase.auth().currentUser.emailVerified) {
-                    alert('welcome')
+
                 } else {
                     this.setState({ spinner: false });
                     alert('verifikasi dulu');
@@ -130,7 +130,7 @@ class SignInPage extends Component {
                                 borderColor: '#598c5f',
                                 borderWidth: 2
                             }}>
-                                <Text style={{ color: '#640164' }}>Masuk</Text>
+                                <Text style={{ color: '#598c5f' }}>Masuk</Text>
                             </Button>
                             <Text style={{ textAlign: 'center', marginVertical: 15 }}>or</Text>
                             <Button
