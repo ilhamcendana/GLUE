@@ -122,7 +122,7 @@ export default class InputPengaduan extends Component {
                 .then(() => {
                     const { username, uid, caption, postPictUrl, profilePictUrl } = this.state;
                     firebase.firestore().collection("posts").add({
-                        name: username,
+                        nama: username,
                         uid: uid,
                         caption: caption,
                         postPict: postPictUrl,
@@ -150,7 +150,7 @@ export default class InputPengaduan extends Component {
         } else {
             const { username, uid, caption, postPictUrl, profilePictUrl } = this.state;
             firebase.firestore().collection("posts").add({
-                name: username,
+                nama: username,
                 uid: uid,
                 caption: caption,
                 postPict: postPictUrl,

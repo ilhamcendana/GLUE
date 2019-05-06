@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { View, FlatList, RefreshControl, ActivityIndicator, Dimensions, Image, ScrollView, Animated, Easing } from 'react-native';
+import { View, FlatList, RefreshControl, ActivityIndicator, Dimensions, Image, ScrollView, Animated, Easing, Alert } from 'react-native';
 import { ImagePicker, Permissions } from 'expo';
-import { Container, Header, Content, Right, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, ActionSheet, Spinner } from 'native-base';
+import { Container, Header, Content, Right, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, List, ListItem, Spinner } from 'native-base';
 import Info from '../Info/Info';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
@@ -33,14 +33,10 @@ class Feed extends Component {
         loading: false,
         refreshing: false,
         posts: [],
+        openPostOptionKey: '',
+        openPostOptionUid: '',
+        openPostOptionReport: 0,
         previewImagePost: '',
-        clickedActionSheet: null,
-        liked: null,
-        uidLiked: '',
-        a: [
-            { a: 'a' },
-            { b: 'b' }
-        ]
     }
 
     static navigationOptions = {
@@ -148,8 +144,8 @@ class Feed extends Component {
         )
     }
 
-    voteColor = () => {
-
+    openPostOption = (key, uid, report) => {
+        this.setState({ openPostOptionKey: key, openPostOptionUid: uid, openPostOptionReport: report });
     }
 
     openPreviewImagePost = () => {
@@ -159,14 +155,7 @@ class Feed extends Component {
     render() {
         const screenWidth = Dimensions.get('window').width;
         const screenHeight = Dimensions.get('window').height;
-        const voteColor = this.state.isVoteUp ? { color: '#22d62b' } : { color: '#333' };
-        var BUTTONS = ["Lapor", "Hapus Post", "Kembali"];
-        var DESTRUCTIVE_INDEX = 1;
-        var CANCEL_INDEX = 2;
         const { state } = this;
-        if (this.state.clickedActionSheet === 0) {
-            alert('lapor')
-        };
         return (
             <>
                 <Animated.View style={{ translateY: this.state.welcomePage, zIndex: 100, position: 'absolute', justifyContent: 'center', alignItems: 'center', width: Dimensions.get('window').width, height: Dimensions.get('window').height, backgroundColor: '#598c5f' }}>
@@ -216,7 +205,7 @@ class Feed extends Component {
                                     refreshing={this.state.refreshing}
                                     onRefresh={this.onRefreshEvent}
                                     ListFooterComponent={this.footerComponent}
-                                    renderItem={({ item }) => (
+                                    renderItem={({ item, index }) => (
 
                                         <Animated.View style={{ opacity: this.state.feedAnimation }}>
                                             <Content padder>
@@ -225,22 +214,12 @@ class Feed extends Component {
                                                         <Left>
                                                             <Thumbnail source={{ uri: item.profilePict }} />
                                                             <Body>
-                                                                <Text>{item.nama}</Text>
+                                                                <Text>{item.name}</Text>
                                                                 <Text note>{item.todayDate}</Text>
                                                             </Body>
                                                             <Right>
                                                                 <View style={{ justifyContent: 'space-between' }}>
-                                                                    <Button transparent onPress={() =>
-                                                                        ActionSheet.show(
-                                                                            {
-                                                                                options: BUTTONS,
-                                                                                cancelButtonIndex: CANCEL_INDEX,
-                                                                                destructiveButtonIndex: DESTRUCTIVE_INDEX,
-                                                                            },
-                                                                            buttonIndex => {
-                                                                                this.setState({ clickedActionSheet: BUTTONS[buttonIndex] });
-                                                                            }
-                                                                        )}>
+                                                                    <Button transparent onPress={() => this.openPostOption(item.key, item.uid, item.postInfo.totalReported)}>
                                                                         <Icon type='Feather' name='chevron-down'
                                                                             style={{ color: '#598c5f' }} />
                                                                     </Button>
@@ -260,37 +239,13 @@ class Feed extends Component {
                                                     </CardItem>
                                                     <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
                                                         <View style={{ flexDirection: 'row' }}>
-                                                            <Left>
-
-                                                            </Left>
-
-                                                            <Body>
-                                                                <Button transparent style={{ justifyContent: 'center' }}
-                                                                    onPress={() => {
-                                                                        const uid = firebase.auth().currentUser.uid;
-                                                                        const ref = firebase.firestore().collection('posts').doc(item.key);
-                                                                        ref.get().then(snap => {
-                                                                            if (snap.data().userWhoLiked[uid] !== undefined) {
-                                                                                if (snap.data().userWhoLiked[uid] === false) {
-                                                                                    ref.set({
-                                                                                        postInfo: {
-                                                                                            totalUpVote: item.postInfo.totalUpVote + 1
-                                                                                        },
-                                                                                        userWhoLiked: {
-                                                                                            [uid]: true
-                                                                                        }
-                                                                                    }, { merge: true })
-                                                                                } else {
-                                                                                    ref.set({
-                                                                                        postInfo: {
-                                                                                            totalUpVote: item.postInfo.totalUpVote - 1
-                                                                                        },
-                                                                                        userWhoLiked: {
-                                                                                            [uid]: false
-                                                                                        }
-                                                                                    }, { merge: true })
-                                                                                }
-                                                                            } else {
+                                                            <Button transparent style={{ justifyContent: 'center', width: 150 }}
+                                                                onPress={() => {
+                                                                    const uid = firebase.auth().currentUser.uid;
+                                                                    const ref = firebase.firestore().collection('posts').doc(item.key);
+                                                                    ref.get().then(snap => {
+                                                                        if (snap.data().userWhoLiked[uid] !== undefined) {
+                                                                            if (snap.data().userWhoLiked[uid] === false) {
                                                                                 ref.set({
                                                                                     postInfo: {
                                                                                         totalUpVote: item.postInfo.totalUpVote + 1
@@ -299,33 +254,79 @@ class Feed extends Component {
                                                                                         [uid]: true
                                                                                     }
                                                                                 }, { merge: true })
+                                                                                let sample = [...this.state.posts];
+                                                                                for (let i = 0; i < sample.length; i++) {
+                                                                                    if (sample[i].key === item.key) {
+                                                                                        sample[i].postInfo.totalUpVote += 1;
+                                                                                        sample[i].userWhoLiked[uid] = true;
+                                                                                    }
+                                                                                }
+                                                                                this.setState({ posts: sample });
+                                                                            } else {
+                                                                                ref.set({
+                                                                                    postInfo: {
+                                                                                        totalUpVote: item.postInfo.totalUpVote - 1
+                                                                                    },
+                                                                                    userWhoLiked: {
+                                                                                        [uid]: false
+                                                                                    }
+                                                                                }, { merge: true })
+                                                                                let sample = [...this.state.posts];
+                                                                                for (let i = 0; i < sample.length; i++) {
+                                                                                    if (sample[i].key === item.key) {
+                                                                                        sample[i].postInfo.totalUpVote -= 1;
+                                                                                        sample[i].userWhoLiked[uid] = false;
+                                                                                    }
+                                                                                }
+                                                                                this.setState({ posts: sample });
                                                                             }
-                                                                        }).then(() => {
+                                                                        } else {
+                                                                            ref.set({
+                                                                                postInfo: {
+                                                                                    totalUpVote: item.postInfo.totalUpVote + 1
+                                                                                },
+                                                                                userWhoLiked: {
+                                                                                    [uid]: true
+                                                                                }
+                                                                            }, { merge: true })
                                                                             let sample = [...this.state.posts];
-                                                                            for (let i = 0; sample.length; i++) {
+                                                                            for (let i = 0; i < sample.length; i++) {
                                                                                 if (sample[i].key === item.key) {
-                                                                                    sample[i].postInfo.totalUpVote = item.postInfo.totalUpVote + 1
+                                                                                    sample[i].postInfo.totalUpVote += 1;
+                                                                                    sample[i].userWhoLiked[uid] = true;
                                                                                 }
                                                                             }
-                                                                            this.setState({ posts: sample })
-                                                                        })
-                                                                    }}>
-                                                                    <Icon name="arrow-up-circle" type='Feather'
-                                                                        style={{ color: '#598c5f' }}
-                                                                    />
-                                                                    <Text style={{ color: '#598c5f' }}>
-                                                                        {item.postInfo.totalUpVote} Vote</Text>
-                                                                </Button>
-                                                            </Body>
-
-                                                            <Right>
-                                                            </Right>
+                                                                            this.setState({ posts: sample });
+                                                                        }
+                                                                        if (item.postInfo.totalUpVote >= 20) {
+                                                                            ref.set({
+                                                                                postInfo: {
+                                                                                    isTrend: true
+                                                                                }
+                                                                            }, { merge: true });
+                                                                        } else {
+                                                                            ref.set({
+                                                                                postInfo: {
+                                                                                    isTrend: false
+                                                                                }
+                                                                            }, { merge: true });
+                                                                        }
+                                                                    }).then(() => {
+                                                                        item.postInfo.totalUpVote + 1
+                                                                    })
+                                                                }}>
+                                                                <Icon name="arrow-up-circle" type='Feather'
+                                                                    style={item.userWhoLiked ? item.userWhoLiked[firebase.auth().currentUser.uid] === true ? { color: '#598c5f' } : { color: '#333' } : { color: '#333' }}
+                                                                />
+                                                                <Text style={item.userWhoLiked ? item.userWhoLiked[firebase.auth().currentUser.uid] === true ? { color: '#598c5f' } : { color: '#333' } : { color: '#333' }}>
+                                                                    {item.postInfo.totalUpVote} {item.postInfo.totalUpVote > 0 ? 'VOTES' : 'VOTE'}</Text>
+                                                            </Button>
                                                         </View>
                                                         <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
                                                             <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.props.navi}>
-                                                                <Text style={{ color: '#598c5f', fontSize: 10 }}>21 Comments</Text>
+                                                                <Text style={{ color: '#598c5f', fontSize: 10 }}>{item.postInfo.totalComments} {item.postInfo.totalComments > 1 ? 'Comments' : 'Comment'}</Text>
                                                             </Button>
-                                                            {item.isTrend ?
+                                                            {item.postInfo.totalUpVote >= 20 ?
                                                                 <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
                                                                     <Icon type='Ionicons' name='star'
                                                                         style={{ color: '#fff' }} />
@@ -339,6 +340,72 @@ class Feed extends Component {
                                     )}
                                 />
                             )}
+
+                        {state.openPostOptionKey !== '' ? (
+                            <View style={{ paddingHorizontal: 40, backgroundColor: 'rgba(0,0,0,.4)', zIndex: 1000, position: 'absolute', width: screenWidth, height: screenHeight }}>
+                                <List style={{ marginTop: 50, backgroundColor: '#fff', borderRadius: 15, overflow: 'hidden' }}>
+                                    {state.openPostOptionUid === firebase.auth().currentUser.uid ? (
+                                        <ListItem>
+                                            <Button transparent block style={{ width: '100%' }}
+                                                onPress={() => Alert.alert(
+                                                    'HAPUS POST',
+                                                    'Anda yakin ?',
+                                                    [
+                                                        { text: 'Tidak', style: 'cancel' },
+                                                        {
+                                                            text: 'Ya', style: 'destructive', onPress: () => {
+                                                                this.setState({ spinner: true });
+                                                                firebase.firestore().collection('posts').doc(state.openPostOptionKey).delete().then(() => {
+                                                                    this.fetchingPost();
+                                                                    this.setState({ openPostOptionKey: '', openPostOptionUid: '', spinner: false });
+                                                                    alert('Post Dihapus');
+                                                                })
+                                                            }
+                                                        }
+                                                    ]
+                                                )}>
+                                                <Text style={{ color: '#333', }}>Hapus</Text>
+                                            </Button>
+                                        </ListItem>
+                                    ) : (
+                                            <ListItem style={{ justifyContent: 'center' }}>
+                                                <Button transparent block style={{ width: '100%' }}
+                                                    onPress={() => Alert.alert(
+                                                        'LAPOR POST',
+                                                        'Apakah post ini mengandung salah satu konten pornografi,ujaran kebencian atau hoaks ?',
+                                                        [
+                                                            { text: 'Tidak', style: 'cancel' },
+                                                            {
+                                                                text: 'Ya', onPress: () => {
+                                                                    this.setState({ spinner: true });
+                                                                    const ref = firebase.firestore().collection('posts').doc(state.openPostOptionKey);
+                                                                    ref.set({
+                                                                        postInfo: {
+                                                                            totalReported: state.openPostOptionReport + 1
+                                                                        }
+                                                                    }, { merge: true }).then(() => {
+                                                                        this.fetchingPost();
+                                                                        this.setState({ openPostOptionKey: '', openPostOptionUid: '', openPostOptionReport: 0, spinner: false });
+                                                                        alert('Post Telah Dilaporkan');
+                                                                    })
+                                                                }
+                                                            }
+                                                        ]
+                                                    )}>
+                                                    <Text style={{ color: '#333', }}>Lapor</Text>
+                                                </Button>
+                                            </ListItem>
+                                        )}
+                                    <ListItem>
+                                        <Button transparent block
+                                            style={{ width: '100%' }}
+                                            onPress={() => this.setState({ openPostOptionKey: '', openPostOptionUid: '', openPostOptionReport: 0 })}>
+                                            <Text style={{ color: '#333' }}>Kembali</Text>
+                                        </Button>
+                                    </ListItem>
+                                </List>
+                            </View>
+                        ) : null}
 
 
                         {/* CREATE POST BUTTON */}
