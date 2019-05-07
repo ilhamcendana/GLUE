@@ -48,7 +48,6 @@ class Feed extends Component {
         this.setState({ uid: firebase.auth().currentUser.uid })
         // firebase.database().ref(`users/${firebase.auth().currentUser.uid}/profile`).once(('value'), (snap) => this.setState({ username: snap.val().nama }))
         this.fetchingPost();
-        if (!this.state.loading) this.feedAnimation();
     }
 
     fetchingPost = () => {
@@ -64,6 +63,7 @@ class Feed extends Component {
                 this.setState({ posts: 'empty', loading: false, refreshing: false });
             } else {
                 this.setState({ posts: data, loading: false, refreshing: false });
+                this.feedAnimation();
             }
         }).catch((err) => {
             alert(err);
@@ -74,18 +74,6 @@ class Feed extends Component {
     onRefreshEvent = () => {
         this.setState({ refreshing: true }, () => this.fetchingPost());
     };
-
-    updatingPostEvent = () => {
-        const ref = firebase.database().ref('posts/');
-        ref.once('value', (snap) => {
-            const newData = Object.values(snap.val()).reverse();
-            const newPost = newData;
-            this.setState({ posts: newPost, loading: false, refreshing: false, spinner: false });
-        }).catch(() => {
-            this.setState({ loading: false, refreshing: false });
-            alert(err);
-        })
-    }
 
     feedAnimation = () => {
         Animated.timing(this.state.feedAnimation, {
@@ -127,7 +115,6 @@ class Feed extends Component {
     };
 
     closeTrendAnimation = () => {
-        const screenWidth = Dimensions.get('window').width;
         Animated.timing(this.state.trendAnimated, {
             toValue: 250,
             duration: 500,
@@ -209,12 +196,12 @@ class Feed extends Component {
 
                                         <Animated.View style={{ opacity: this.state.feedAnimation }}>
                                             <Content padder>
-                                                <Card style={{ borderRadius: 20, borderWidth: 5, }} key={item.key}>
+                                                <Card style={{ borderRadius: 20, borderWidth: 5 }} key={item.key}>
                                                     <CardItem bordered header style={{ borderRadius: 20 }}>
                                                         <Left>
                                                             <Thumbnail source={{ uri: item.profilePict }} />
                                                             <Body>
-                                                                <Text>{item.name}</Text>
+                                                                <Text>{item.nama}</Text>
                                                                 <Text note>{item.todayDate}</Text>
                                                             </Body>
                                                             <Right>
@@ -234,7 +221,18 @@ class Feed extends Component {
                                                                 <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
                                                                 :
                                                                 null}
-                                                            <Text>{item.caption}</Text>
+                                                            {item.caption.length > 600 ?
+                                                                <View>
+                                                                    <Text
+                                                                        onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
+                                                                        style={{ color: '#333', fontWeight: '100' }}>{item.caption.slice(0, 600)}...</Text>
+                                                                    <Text style={{ color: '#598c5f', marginTop: 10 }}
+                                                                        onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
+                                                                    >Lihat lebih banyak</Text>
+                                                                </View>
+                                                                : <Text
+                                                                    onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
+                                                                    style={{ color: '#333' }}>{item.caption}</Text>}
                                                         </Body>
                                                     </CardItem>
                                                     <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
@@ -311,8 +309,6 @@ class Feed extends Component {
                                                                                 }
                                                                             }, { merge: true });
                                                                         }
-                                                                    }).then(() => {
-                                                                        item.postInfo.totalUpVote + 1
                                                                     })
                                                                 }}>
                                                                 <Icon name="arrow-up-circle" type='Feather'
@@ -323,7 +319,7 @@ class Feed extends Component {
                                                             </Button>
                                                         </View>
                                                         <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                            <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.props.navi}>
+                                                            <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}>
                                                                 <Text style={{ color: '#598c5f', fontSize: 10 }}>{item.postInfo.totalComments} {item.postInfo.totalComments > 1 ? 'Comments' : 'Comment'}</Text>
                                                             </Button>
                                                             {item.postInfo.totalUpVote >= 20 ?
@@ -378,15 +374,46 @@ class Feed extends Component {
                                                             {
                                                                 text: 'Ya', onPress: () => {
                                                                     this.setState({ spinner: true });
+                                                                    const uid = firebase.auth().currentUser.uid;
                                                                     const ref = firebase.firestore().collection('posts').doc(state.openPostOptionKey);
-                                                                    ref.set({
-                                                                        postInfo: {
-                                                                            totalReported: state.openPostOptionReport + 1
+                                                                    ref.get().then(snap => {
+                                                                        if (snap.data().userWhoReported[uid] === undefined) {
+                                                                            ref.set({
+                                                                                postInfo: {
+                                                                                    totalReported: state.openPostOptionReport + 1
+                                                                                },
+                                                                                userWhoReported: {
+                                                                                    [uid]: true
+                                                                                }
+                                                                            }, { merge: true }).then(() => {
+                                                                                this.fetchingPost();
+                                                                                this.setState({ openPostOptionKey: '', openPostOptionUid: '', openPostOptionReport: 0, spinner: false });
+                                                                                alert('Post Telah Dilaporkan');
+                                                                            })
+                                                                        } else {
+                                                                            Alert.alert(
+                                                                                'Lapor',
+                                                                                'Anda sudah pernah melaporkan post ini',
+                                                                                [
+                                                                                    { text: 'OK' }
+                                                                                ]);
+                                                                            this.setState({ spinner: false });
                                                                         }
-                                                                    }, { merge: true }).then(() => {
-                                                                        this.fetchingPost();
-                                                                        this.setState({ openPostOptionKey: '', openPostOptionUid: '', openPostOptionReport: 0, spinner: false });
-                                                                        alert('Post Telah Dilaporkan');
+                                                                        if (item.postInfo.totalUpVote >= 20) {
+                                                                            ref.set({
+                                                                                postInfo: {
+                                                                                    isTrend: true
+                                                                                }
+                                                                            }, { merge: true });
+                                                                        } else {
+                                                                            ref.set({
+                                                                                postInfo: {
+                                                                                    isTrend: false
+                                                                                }
+                                                                            }, { merge: true });
+                                                                        }
+                                                                    }).then(() => {
+                                                                        item.postInfo.totalUpVote + 1
                                                                     })
                                                                 }
                                                             }
@@ -444,7 +471,12 @@ const stackFeed = createStackNavigator({
             header: null
         }
     },
-    OpenedPostComponent: OpenedPost
+    OpenedPostComponent: {
+        screen: OpenedPost,
+        navigationOptions: {
+            header: null
+        }
+    }
 })
 
 export default createAppContainer(stackFeed);

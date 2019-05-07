@@ -134,6 +134,7 @@ export default class InputPengaduan extends Component {
                             totalComments: 0
                         },
                         userWhoLiked: {},
+                        userWhoReported: {},
                         todayDate: todayDate,
                         todayTime: todayTime,
                         mergeDate: mergeDate
@@ -162,6 +163,7 @@ export default class InputPengaduan extends Component {
                     totalComments: 0
                 },
                 userWhoLiked: {},
+                userWhoReported: {},
                 todayDate: todayDate,
                 todayTime: todayTime,
                 mergeDate: mergeDate,

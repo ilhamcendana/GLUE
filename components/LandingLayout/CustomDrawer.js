@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Switch } from 'react-native';
+import { View, Switch, Alert } from 'react-native';
 import { Container, Header, Body, Thumbnail, Text, Icon, Right, Content, List, ListItem, Left, Button, Badge, Footer, FooterTab } from 'native-base';
 import { DrawerItems } from 'react-navigation';
 import * as firebase from 'firebase';
@@ -63,7 +63,18 @@ class CustomDrawer extends Component {
                 </Content>
                 <Footer>
                     <FooterTab style={{ backgroundColor: '#598c5f' }}>
-                        <Button vertical onPress={() => firebase.auth().signOut()}>
+                        <Button vertical onPress={() => Alert.alert(
+                            'Keluar',
+                            'Anda yakin ?',
+                            [
+                                { text: 'Kembali', style: 'cancel' },
+                                {
+                                    text: 'Ya', onPress: () => {
+                                        firebase.auth().signOut();
+                                    }
+                                }
+                            ]
+                        )}>
                             <Icon name='log-out' type='Feather' />
                         </Button>
                     </FooterTab>
