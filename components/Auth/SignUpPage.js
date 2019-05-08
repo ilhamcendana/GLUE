@@ -31,43 +31,19 @@ export default class SignUpPage extends Component {
         header: null
     }
 
-    //ALL SIGNUP EVENT
-    signupEmailValChange = (e) => {
-        this.setState({ signupEmailValue: e });
-    };
-
-    signupPassValChange = (e) => {
-        this.setState({ signupPassValue: e });
-    };
-
-    signupRePassValChange = (e) => {
-        this.setState({ signupRePassValue: e });
-    };
-
-    inputNamaProfileEvent = e => {
-        this.setState({ inputNamaProfile: e });
-    };
-    inputKelasProfileEvent = e => {
-        this.setState({ inputKelasProfile: e });
-    };
-    inputNPMProfileEvent = e => {
-        this.setState({ inputNPMProfile: e });
-    };
-    inputJurusanProfileEvent = e => {
-        this.setState({ inputJurusanProfile: e });
-    };
-
     signupEvent = () => {
-        const { signupEmailValue, signupRePassValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
         this.setState({ spinner: true });
-        if (inputNamaProfile === '' || signupRePassValue !== signupPassValue || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length !== 8) {
+        const { signupEmailValue, signupRePassValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+        if (inputNamaProfile === '' || signupRePassValue !== signupPassValue || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length !== 8 || signupEmailValue === '') {
             alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
             this.setState({ spinner: false });
         } else {
+            this.setState({ spinner: true });
             firebase.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue)
-                .then(() => {
-                    firebase.auth().currentUser.sendEmailVerification().then(() => {
-                        firebase.auth().currentUser.updateProfile({
+                .then((e) => {
+                    const currentuser = e.user;
+                    currentuser.sendEmailVerification().then(() => {
+                        currentuser.updateProfile({
                             displayName: inputNamaProfile,
                             photoURL: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c'
                         });
@@ -82,7 +58,6 @@ export default class SignUpPage extends Component {
                             totalTrends: 0,
                             isVerified: false
                         }
-
                         firebase.firestore().collection("users").doc(firebase.auth().currentUser.uid).set({
                             profile: userData
                         }).then(() => {
@@ -151,16 +126,23 @@ export default class SignUpPage extends Component {
                                         autoCapitalize='none'
                                         keyboardType='email-address'
                                         returnKeyType='done'
-                                        onChangeText={this.signupEmailValChange}
-                                        value={this.state.signupEmailValue} />
+                                        onChangeText={(e) => {
+                                            this.setState({
+                                                signupEmailValue: e
+                                            })
+                                        }}
+                                    />
                                 </Item>
                                 <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Password atleast 6 characters</Label>
                                     <Input
                                         returnKeyType='done'
                                         secureTextEntry={true}
-                                        onChangeText={this.signupPassValChange}
-                                        value={this.state.signupPassValue}
+                                        onChangeText={(e) => {
+                                            this.setState({
+                                                signupPassValue: e
+                                            })
+                                        }}
                                         autoCapitalize='none'
                                     />
                                 </Item>
@@ -170,8 +152,11 @@ export default class SignUpPage extends Component {
                                     <Input
                                         returnKeyType='done'
                                         secureTextEntry={true}
-                                        onChangeText={this.signupRePassValChange}
-                                        value={this.state.signupRePassValue}
+                                        onChangeText={(e) => {
+                                            this.setState({
+                                                signupRePassValue: e
+                                            })
+                                        }}
                                         autoCapitalize='none'
                                     />
                                 </Item>
@@ -179,22 +164,31 @@ export default class SignUpPage extends Component {
                                 <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Nama</Label>
                                     <Input
-                                        onChangeText={this.inputNamaProfileEvent}
-                                        value={this.state.inputNamaProfile} />
+                                        onChangeText={(e) => {
+                                            this.setState({
+                                                inputNamaProfile: e
+                                            })
+                                        }} />
                                 </Item>
                                 <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>NPM</Label>
                                     <Input
-                                        onChangeText={this.inputNPMProfileEvent}
-                                        value={this.state.inputNPMProfile}
+                                        onChangeText={(e) => {
+                                            this.setState({
+                                                inputNPMProfile: e
+                                            })
+                                        }}
                                         autoCapitalize='none'
                                         keyboardType='number-pad' />
                                 </Item>
                                 <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
                                     <Label>Kelas</Label>
                                     <Input
-                                        onChangeText={this.inputKelasProfileEvent}
-                                        value={this.state.inputKelasProfile}
+                                        onChangeText={(e) => {
+                                            this.setState({
+                                                inputKelasProfile: e
+                                            })
+                                        }}
                                         autoCapitalize='sentences'
 
                                     />
@@ -207,7 +201,11 @@ export default class SignUpPage extends Component {
                                         iosIcon={<Icon name="arrow-down" />}
                                         headerBackButtonText="Back"
                                         selectedValue={this.state.inputJurusanProfile}
-                                        onValueChange={this.inputJurusanProfileEvent}
+                                        onValueChange={(e) => {
+                                            this.setState({
+                                                inputJurusanProfile: e
+                                            })
+                                        }}
                                     >
                                         {jurusan.sort().map(j => <Picker.Item label={j} key={j} value={j} />
                                         )}

@@ -123,7 +123,7 @@ closeMoreOption = () => {
         toValue: 400,
         duration: 500
     }).start();
-}
+};
 
 SignInComponent = () => {
     return <SignInPage
@@ -250,8 +250,8 @@ render() {
 
 
     );
-}
-}
+};
+
 
 
 

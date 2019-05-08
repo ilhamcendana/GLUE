@@ -21,7 +21,6 @@ class SignInPage extends Component {
             signEmailValue: '',
             signPassValue: '',
             spinner: false,
-            errorLoginSignupMessage: '',
             isLogin: false
 
         }
@@ -48,19 +47,13 @@ class SignInPage extends Component {
 
         this.setState({ spinner: true });
         firebase.auth().signInWithEmailAndPassword(signEmailValue, signPassValue)
-            .then(() => {
-                if (firebase.auth().currentUser.emailVerified) {
-
-                } else {
+            .then((e) => {
+                if (!e.user.emailVerified) {
                     this.setState({ spinner: false });
                     alert('verifikasi dulu');
                 }
             }).catch((e) => {
-                if (e === 'The email address is badly formatted.' || 'The password is invalid or the user does not have a password.') {
-                    this.setState({ errorLoginSignupMessage: 'Email atau Password salah!' });
-                } else {
-                    this.setState({ errorLoginSignupMessage: e });
-                }
+                this.setState({ spinner: false })
                 alert(e);
             });
     }
