@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, KeyboardAvoidingView } from 'react-native';
+import { View, KeyboardAvoidingView } from 'react-native';
 import {
     Container,
-    Content,
     Form,
     Item,
     Input,
@@ -10,7 +9,6 @@ import {
     Text,
     Label,
     Spinner,
-    H1
 } from 'native-base';
 import * as firebase from 'firebase';
 
@@ -34,13 +32,6 @@ class SignInPage extends Component {
 
 
     //ALL LOGIN EVENT
-    inputEmailValChange = (e) => {
-        this.setState({ signEmailValue: e });
-    };
-
-    inputPassValChange = (e) => {
-        this.setState({ signPassValue: e });
-    };
 
     loginEvent = () => {
         const { signEmailValue, signPassValue } = this.state;
@@ -99,8 +90,11 @@ class SignInPage extends Component {
                                     autoCapitalize='none'
                                     keyboardType='email-address'
                                     returnKeyType='next'
-                                    onChangeText={this.inputEmailValChange}
-                                    value={this.state.signEmailValue}
+                                    onChangeText={(e) => {
+                                        this.setState({
+                                            signEmailValue: e
+                                        })
+                                    }}
                                 />
                             </Item>
                             <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
@@ -108,8 +102,11 @@ class SignInPage extends Component {
                                 <Input
                                     secureTextEntry={true}
                                     returnKeyType='go'
-                                    onChangeText={this.inputPassValChange}
-                                    value={this.state.signPassValue}
+                                    onChangeText={(e) => {
+                                        this.setState({
+                                            signPassValue: e
+                                        })
+                                    }}
                                     autoCapitalize='none'
                                     onSubmitEditing={this.loginEvent}
                                 />
