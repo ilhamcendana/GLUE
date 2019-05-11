@@ -15,6 +15,7 @@ import {
 } from 'native-base';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
+import { ScrollView } from 'react-native-gesture-handler';
 
 export default class SignUpPage extends Component {
     state = {
@@ -125,22 +126,18 @@ export default class SignUpPage extends Component {
                         <Spinner color='#598c5f' />
                     </View>
                 ) : null}
-                <Content style={{
-                    flex: 1,
-                }}>
 
-                    <View style={{ flex: 1, justifyContent: 'space-evenly', }}>
-                        <Text style={{
-                            textAlign: 'center',
-                            fontWeight: '400',
-                            fontSize: 50,
-                            marginVertical: 40
-                        }}>Buat akun</Text>
-
-                        <KeyboardAvoidingView behavior="padding" enabled>
+                <View style={{ flex: 1, justifyContent: 'space-evenly', }}>
+                    <KeyboardAvoidingView behavior="padding" enabled keyboardVerticalOffset={20}>
+                        <ScrollView>
+                            <Text style={{
+                                textAlign: 'center',
+                                fontWeight: '500',
+                                fontSize: 50,
+                                marginVertical: 20
+                            }}>Buat akun</Text>
                             <Form style={{
                                 padding: 20,
-                                flex: 1,
                                 justifyContent: 'center'
                             }}>
 
@@ -231,9 +228,9 @@ export default class SignUpPage extends Component {
                                     style={{ borderColor: '#598c5f', width: 150, borderWidth: 1, display: 'flex', justifyContent: 'center', backgroundColor: 'none', alignSelf: 'center' }}
                                     bordered onPress={() => this.props.navigation.navigate('Login')} block><Text style={{ color: '#598c5f' }}>Masuk</Text></Button>
                             </Form>
-                        </KeyboardAvoidingView>
-                    </View>
-                </Content>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                </View>
             </Container>
         );
     }

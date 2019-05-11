@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { View, FlatList, RefreshControl, ActivityIndicator, Dimensions, Image, ScrollView, Animated, Easing, Alert } from 'react-native';
+import { View, FlatList, RefreshControl, ActivityIndicator, Dimensions, Image, ScrollView, Animated, Easing, Alert, KeyboardAvoidingView } from 'react-native';
 import { ImagePicker, Permissions } from 'expo';
-import { Container, Header, Content, Right, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, List, ListItem, Spinner } from 'native-base';
+import { Container, Header, Content, Right, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body, List, ListItem, Spinner, Input, Item, Textarea } from 'native-base';
 import Info from '../Info/Info';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
@@ -10,6 +10,7 @@ import { createAppContainer, createStackNavigator } from 'react-navigation';
 
 import InputPengaduan from '../InputPengaduan/InputPengaduan';
 import OpenedPost from './OpenedPost';
+import OpenedProfile from './OpenedProfile';
 
 class Feed extends Component {
     state = {
@@ -17,18 +18,14 @@ class Feed extends Component {
         uid: '',
         username: '',
         swiperHeaderTitle: 'GLUE',
-        isVoteUp: false,
-        isVoteDown: false,
         trendsInfo: false,
         translate: new Animated.Value(100),
-        selectedTdkpantasReport: false,
-        selectedHoaxReport: false,
         openReport: new Animated.Value(-500),
-        btnPostDisabled: false,
         feedAnimation: new Animated.Value(0),
-        welcomePage: new Animated.Value(Dimensions.get('window').height),
+        welcomePage: new Animated.Value(0),
         headerAnimation: new Animated.Value(-400),
         trendAnimated: new Animated.Value(250),
+        disableWelcome: false,
         //BELOW IS A POST
         loading: false,
         refreshing: false,
@@ -37,6 +34,8 @@ class Feed extends Component {
         openPostOptionUid: '',
         openPostOptionReport: 0,
         previewImagePost: '',
+        inputComment: '',
+        btnLikeDisabled: false
     }
 
     static navigationOptions = {
@@ -91,18 +90,20 @@ class Feed extends Component {
 
     welcome = () => {
         Animated.timing(this.state.welcomePage, {
-            toValue: 0,
+            toValue: 1,
             duration: 500,
         }).start(() => this.closeWelcome())
     };
 
     closeWelcome = () => {
-        const screenHeight = Dimensions.get('window').height;
         Animated.timing(this.state.welcomePage, {
-            toValue: screenHeight,
+            toValue: 0,
             duration: 500,
             delay: 1000
-        }).start(() => this.headerAnimation())
+        }).start(() => {
+            this.setState({ disableWelcome: true });
+            this.headerAnimation();
+        })
     };
 
     trendAnimated = () => {
@@ -145,9 +146,10 @@ class Feed extends Component {
         const { state } = this;
         return (
             <>
-                <Animated.View style={{ translateY: this.state.welcomePage, zIndex: 100, position: 'absolute', justifyContent: 'center', alignItems: 'center', width: Dimensions.get('window').width, height: Dimensions.get('window').height, backgroundColor: '#598c5f' }}>
-                    <Text style={{ fontWeight: '100', fontSize: 55, color: '#fff' }}>WELCOME</Text>
-                </Animated.View>
+                {!state.disableWelcome ? <Animated.View style={{ opacity: this.state.welcomePage, zIndex: 100, position: 'absolute', justifyContent: 'center', alignItems: 'center', width: Dimensions.get('window').width, height: Dimensions.get('window').height, backgroundColor: '#598c5f' }}>
+                    <Icon name='sun' type='Feather' style={{ color: '#fff', marginBottom: 10 }} />
+                    <Text style={{ fontWeight: '100', fontSize: 15, color: '#fff', textAlign: 'center' }}>Gunadarma Lounge</Text>
+                </Animated.View> : null}
 
                 <Animated.View style={{ position: 'absolute', zIndex: 150, bottom: 0, translateY: this.state.trendAnimated, backgroundColor: '#598c5f', paddingVertical: 15, width: screenWidth }}>
                     <Text style={{ textAlign: 'center', color: '#fff', fontWeight: 'bold' }}>This post is trend</Text>
@@ -162,8 +164,8 @@ class Feed extends Component {
                         </Left>
                         <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>{this.state.swiperHeaderTitle}</Text></Body>
                         <Right style={{ flex: 1 }}>
-                            <Button transparent>
-                                <Icon type='Feather' name='more-horizontal' />
+                            <Button transparent onPress={() => this.refs.swiper.scrollBy(1)}>
+                                <Icon type='Feather' name='star' />
                             </Button>
                         </Right>
                     </Header>
@@ -173,6 +175,7 @@ class Feed extends Component {
 
                 <Swiper loop={false} showsPagination={false}
                     index={0}
+                    ref='swiper'
                     bounces={true}
                     onIndexChanged={(e) => e === 1 ? this.setState({ swiperHeaderTitle: 'TRENDS' }) : this.setState({ swiperHeaderTitle: 'GLUE' })}>
                     <Container>
@@ -187,154 +190,213 @@ class Feed extends Component {
                                 </View>
                             </ScrollView>
                         ) : (
-                                <FlatList
-                                    data={this.state.posts}
-                                    refreshing={this.state.refreshing}
-                                    onRefresh={this.onRefreshEvent}
-                                    ListFooterComponent={this.footerComponent}
-                                    renderItem={({ item, index }) => (
+                                <KeyboardAvoidingView behavior='padding' enabled keyboardVerticalOffset={90}>
+                                    <FlatList
+                                        data={this.state.posts}
+                                        refreshing={this.state.refreshing}
+                                        onRefresh={this.onRefreshEvent}
+                                        ListFooterComponent={this.footerComponent}
+                                        renderItem={({ item, index }) => (
 
-                                        <Animated.View style={{ opacity: this.state.feedAnimation }}>
-                                            <Content padder>
-                                                <Card style={{ borderRadius: 20, borderWidth: 5 }} key={item.key}>
-                                                    <CardItem bordered header style={{ borderRadius: 20 }}>
-                                                        <Left>
-                                                            <Thumbnail source={{ uri: item.profilePict }} />
+                                            <Animated.View style={{ opacity: this.state.feedAnimation }}>
+                                                <Content padder>
+                                                    <Card style={{ borderRadius: 20, borderWidth: 5 }} key={item.key}>
+                                                        <CardItem bordered header style={{ borderRadius: 20 }}>
+                                                            <Left>
+                                                                <Thumbnail source={{ uri: item.profilePict }} />
+                                                                <Body>
+                                                                    <Text onPress={item.uid === firebase.auth().currentUser.uid ? () => this.props.navigation.navigate('Profile') : () => this.props.navigation.navigate('OpenedProfileComponent', { uid: item.uid })}>{item.nama}</Text>
+                                                                    <Text note>{item.todayDate}</Text>
+                                                                </Body>
+                                                                <Right>
+                                                                    <View style={{ justifyContent: 'space-between' }}>
+                                                                        <Button transparent onPress={() => this.openPostOption(item.key, item.uid, item.postInfo.totalReported)}>
+                                                                            <Icon type='Feather' name='chevron-down'
+                                                                                style={{ color: '#598c5f' }} />
+                                                                        </Button>
+                                                                        <Text note>{item.todayTime}</Text>
+                                                                    </View>
+                                                                </Right>
+                                                            </Left>
+                                                        </CardItem>
+                                                        <CardItem>
                                                             <Body>
-                                                                <Text>{item.nama}</Text>
-                                                                <Text note>{item.todayDate}</Text>
+                                                                {item.postPict !== '' ?
+                                                                    <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
+                                                                    :
+                                                                    null}
+                                                                {item.caption.length > 600 ?
+                                                                    <View>
+                                                                        <Text
+                                                                            onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
+                                                                            style={{ color: '#333', fontWeight: '100' }}>{item.caption.slice(0, 600)}...</Text>
+                                                                        <Text style={{ color: '#598c5f', marginTop: 10 }}
+                                                                            onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
+                                                                        >Lihat lebih banyak</Text>
+                                                                    </View>
+                                                                    : <Text
+                                                                        onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
+                                                                        style={{ color: '#333' }}>{item.caption}</Text>}
                                                             </Body>
-                                                            <Right>
-                                                                <View style={{ justifyContent: 'space-between' }}>
-                                                                    <Button transparent onPress={() => this.openPostOption(item.key, item.uid, item.postInfo.totalReported)}>
-                                                                        <Icon type='Feather' name='chevron-down'
-                                                                            style={{ color: '#598c5f' }} />
-                                                                    </Button>
-                                                                    <Text note>{item.todayTime}</Text>
-                                                                </View>
-                                                            </Right>
-                                                        </Left>
-                                                    </CardItem>
-                                                    <CardItem>
-                                                        <Body>
-                                                            {item.postPict !== '' ?
-                                                                <Image source={{ uri: item.postPict }} style={{ height: 200, width: '100%', marginBottom: 10, flex: 1 }} />
-                                                                :
-                                                                null}
-                                                            {item.caption.length > 600 ?
-                                                                <View>
-                                                                    <Text
-                                                                        onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
-                                                                        style={{ color: '#333', fontWeight: '100' }}>{item.caption.slice(0, 600)}...</Text>
-                                                                    <Text style={{ color: '#598c5f', marginTop: 10 }}
-                                                                        onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
-                                                                    >Lihat lebih banyak</Text>
-                                                                </View>
-                                                                : <Text
-                                                                    onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}
-                                                                    style={{ color: '#333' }}>{item.caption}</Text>}
-                                                        </Body>
-                                                    </CardItem>
-                                                    <CardItem bordered style={{ borderRadius: 20, flexDirection: 'column' }}>
-                                                        <View style={{ flexDirection: 'row' }}>
-                                                            <Button transparent style={{ justifyContent: 'center', width: 150 }}
-                                                                onPress={() => {
-                                                                    const uid = firebase.auth().currentUser.uid;
-                                                                    const ref = firebase.firestore().collection('posts').doc(item.key);
-                                                                    ref.get().then(snap => {
-                                                                        if (snap.data().userWhoLiked[uid] !== undefined) {
-                                                                            if (snap.data().userWhoLiked[uid] === false) {
-                                                                                ref.set({
-                                                                                    postInfo: {
-                                                                                        totalUpVote: item.postInfo.totalUpVote + 1
-                                                                                    },
-                                                                                    userWhoLiked: {
-                                                                                        [uid]: true
+                                                        </CardItem>
+                                                        <CardItem bordered style={{ flexDirection: 'column' }}>
+                                                            <View style={{ flexDirection: 'row' }}>
+                                                                <Button transparent style={{ justifyContent: 'center', width: 150 }}
+                                                                    onPress={() => {
+                                                                        this.setState({ spinner: true }, () => {
+                                                                            const uid = firebase.auth().currentUser.uid;
+                                                                            const ref = firebase.firestore().collection('posts').doc(item.key);
+                                                                            ref.get().then(snap => {
+                                                                                if (snap.data().userWhoLiked[uid] !== undefined) {
+                                                                                    if (snap.data().userWhoLiked[uid] === false) {
+                                                                                        ref.set({
+                                                                                            postInfo: {
+                                                                                                totalUpVote: item.postInfo.totalUpVote + 1
+                                                                                            },
+                                                                                            userWhoLiked: {
+                                                                                                [uid]: true
+                                                                                            }
+                                                                                        }, { merge: true }).then(() => {
+                                                                                            let sample = [...this.state.posts];
+                                                                                            for (let i = 0; i < sample.length; i++) {
+                                                                                                if (sample[i].key === item.key) {
+                                                                                                    sample[i].postInfo.totalUpVote += 1;
+                                                                                                    sample[i].userWhoLiked[uid] = true;
+                                                                                                }
+                                                                                            }
+                                                                                            this.setState({ posts: sample, spinner: false });
+                                                                                        })
+                                                                                    } else {
+                                                                                        ref.set({
+                                                                                            postInfo: {
+                                                                                                totalUpVote: item.postInfo.totalUpVote - 1
+                                                                                            },
+                                                                                            userWhoLiked: {
+                                                                                                [uid]: false
+                                                                                            }
+                                                                                        }, { merge: true }).then(() => {
+                                                                                            let sample = [...this.state.posts];
+                                                                                            for (let i = 0; i < sample.length; i++) {
+                                                                                                if (sample[i].key === item.key) {
+                                                                                                    sample[i].postInfo.totalUpVote -= 1;
+                                                                                                    sample[i].userWhoLiked[uid] = false;
+                                                                                                }
+                                                                                            }
+                                                                                            this.setState({ posts: sample, spinner: false });
+                                                                                        })
                                                                                     }
-                                                                                }, { merge: true })
-                                                                                let sample = [...this.state.posts];
-                                                                                for (let i = 0; i < sample.length; i++) {
-                                                                                    if (sample[i].key === item.key) {
-                                                                                        sample[i].postInfo.totalUpVote += 1;
-                                                                                        sample[i].userWhoLiked[uid] = true;
-                                                                                    }
+                                                                                } else {
+                                                                                    ref.set({
+                                                                                        postInfo: {
+                                                                                            totalUpVote: item.postInfo.totalUpVote + 1
+                                                                                        },
+                                                                                        userWhoLiked: {
+                                                                                            [uid]: true
+                                                                                        }
+                                                                                    }, { merge: true }).then(() => {
+                                                                                        let sample = [...this.state.posts];
+                                                                                        for (let i = 0; i < sample.length; i++) {
+                                                                                            if (sample[i].key === item.key) {
+                                                                                                sample[i].postInfo.totalUpVote += 1;
+                                                                                                sample[i].userWhoLiked[uid] = true;
+                                                                                            }
+                                                                                        }
+                                                                                        this.setState({ posts: sample, spinner: false });
+                                                                                    })
+
                                                                                 }
-                                                                                this.setState({ posts: sample });
-                                                                            } else {
-                                                                                ref.set({
-                                                                                    postInfo: {
-                                                                                        totalUpVote: item.postInfo.totalUpVote - 1
-                                                                                    },
-                                                                                    userWhoLiked: {
-                                                                                        [uid]: false
-                                                                                    }
-                                                                                }, { merge: true })
-                                                                                let sample = [...this.state.posts];
-                                                                                for (let i = 0; i < sample.length; i++) {
-                                                                                    if (sample[i].key === item.key) {
-                                                                                        sample[i].postInfo.totalUpVote -= 1;
-                                                                                        sample[i].userWhoLiked[uid] = false;
-                                                                                    }
+                                                                                if (item.postInfo.totalUpVote >= 20) {
+                                                                                    ref.set({
+                                                                                        postInfo: {
+                                                                                            isTrend: true
+                                                                                        }
+                                                                                    }, { merge: true });
+                                                                                } else {
+                                                                                    ref.set({
+                                                                                        postInfo: {
+                                                                                            isTrend: false
+                                                                                        }
+                                                                                    }, { merge: true });
                                                                                 }
-                                                                                this.setState({ posts: sample });
-                                                                            }
-                                                                        } else {
-                                                                            ref.set({
-                                                                                postInfo: {
-                                                                                    totalUpVote: item.postInfo.totalUpVote + 1
-                                                                                },
-                                                                                userWhoLiked: {
-                                                                                    [uid]: true
-                                                                                }
-                                                                            }, { merge: true })
-                                                                            let sample = [...this.state.posts];
-                                                                            for (let i = 0; i < sample.length; i++) {
-                                                                                if (sample[i].key === item.key) {
-                                                                                    sample[i].postInfo.totalUpVote += 1;
-                                                                                    sample[i].userWhoLiked[uid] = true;
-                                                                                }
-                                                                            }
-                                                                            this.setState({ posts: sample });
-                                                                        }
-                                                                        if (item.postInfo.totalUpVote >= 20) {
-                                                                            ref.set({
-                                                                                postInfo: {
-                                                                                    isTrend: true
-                                                                                }
-                                                                            }, { merge: true });
-                                                                        } else {
-                                                                            ref.set({
-                                                                                postInfo: {
-                                                                                    isTrend: false
-                                                                                }
-                                                                            }, { merge: true });
-                                                                        }
-                                                                    })
-                                                                }}>
-                                                                <Icon name="arrow-up-circle" type='Feather'
-                                                                    style={item.userWhoLiked ? item.userWhoLiked[firebase.auth().currentUser.uid] === true ? { color: '#598c5f' } : { color: '#333' } : { color: '#333' }}
-                                                                />
-                                                                <Text style={item.userWhoLiked ? item.userWhoLiked[firebase.auth().currentUser.uid] === true ? { color: '#598c5f' } : { color: '#333' } : { color: '#333' }}>
-                                                                    {item.postInfo.totalUpVote} {item.postInfo.totalUpVote > 0 ? 'VOTES' : 'VOTE'}</Text>
-                                                            </Button>
-                                                        </View>
-                                                        <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                            <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}>
-                                                                <Text style={{ color: '#598c5f', fontSize: 10 }}>{item.postInfo.totalComments} {item.postInfo.totalComments > 1 ? 'Comments' : 'Comment'}</Text>
-                                                            </Button>
-                                                            {item.postInfo.totalUpVote >= 20 ?
-                                                                <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
-                                                                    <Icon type='Ionicons' name='star'
-                                                                        style={{ color: '#fff' }} />
+                                                                            })
+
+                                                                        });
+
+
+
+                                                                    }}>
+                                                                    <Icon name="heart" type='Feather'
+                                                                        style={item.userWhoLiked ? item.userWhoLiked[firebase.auth().currentUser.uid] === true ? { color: '#598c5f' } : { color: '#333' } : { color: '#333' }}
+                                                                    />
+                                                                    <Text style={item.userWhoLiked ? item.userWhoLiked[firebase.auth().currentUser.uid] === true ? { color: '#598c5f' } : { color: '#333' } : { color: '#333' }}>
+                                                                        {item.postInfo.totalUpVote}</Text>
                                                                 </Button>
-                                                                : null}
-                                                        </View>
-                                                    </CardItem>
-                                                </Card>
-                                            </Content>
-                                        </Animated.View>
-                                    )}
-                                />
+                                                            </View>
+                                                            <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                                <Button transparent style={{ justifyContent: 'center' }} onPress={() => this.props.navigation.navigate('OpenedPostComponent', { postKey: item.key, postUsername: item.nama })}>
+                                                                    <Text style={{ color: '#598c5f', fontSize: 10 }}>{item.postInfo.totalComments} komentar</Text>
+                                                                </Button>
+                                                                {item.postInfo.totalUpVote >= 20 ?
+                                                                    <Button rounded onPress={this.trendAnimated} style={{ backgroundColor: '#598c5f' }}>
+                                                                        <Icon type='Ionicons' name='star'
+                                                                            style={{ color: '#fff' }} />
+                                                                    </Button>
+                                                                    : null}
+                                                            </View>
+                                                        </CardItem>
+                                                        <CardItem style={{ borderRadius: 20 }}>
+                                                            <View style={{ flexDirection: 'row', width: '100%', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                                <Textarea placeholder='Tambahkan Komentar' rowSpan={2}
+                                                                    style={{ borderBottomWidth: 2, borderColor: '#598c5f', width: '75%', paddingVertical: 10, borderRadius: 10 }}
+                                                                    onChangeText={(e) => {
+                                                                        let sample = [...state.posts];
+                                                                        sample[index].inputComment = e;
+                                                                        this.setState({ posts: sample });
+                                                                    }}
+                                                                    value={state.posts[index].inputComment}
+                                                                />
+                                                                <Button rounded style={state.posts[index].inputComment === '' ? { backgroundColor: '#47684a' } : { backgroundColor: '#598c5f' }} disabled={state.posts[index].inputComment === '' ? true : false}
+                                                                    onPress={() => {
+                                                                        this.setState({ spinner: true });
+                                                                        const ref = firebase.firestore().collection('comments');
+                                                                        const date = new Date();
+                                                                        const monthName = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                                                                        const month = date.getMonth();
+                                                                        const todayDate = date.getDate() + '-' + monthName[month] + '-' + date.getFullYear();
+                                                                        const todayTime = date.getHours() + ':' + date.getMinutes();
+                                                                        const mergeDate = `${date.getFullYear()}${(date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1)}${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}${date.getHours() < 10 ? '0' + date.getHours() : date.getHours()}${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}${date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()}`;
+                                                                        const uid = firebase.auth().currentUser.uid;
+                                                                        ref.add({
+                                                                            commentText: state.posts[index].inputComment,
+                                                                            date: todayDate,
+                                                                            time: todayTime,
+                                                                            mergeDate: mergeDate,
+                                                                            uid: uid,
+                                                                            postKey: item.key,
+                                                                            commentKey: ''
+                                                                        }).then((docRef) => {
+                                                                            firebase.firestore().collection('comments').doc(docRef.id).set({ commentKey: docRef.id }, { merge: true })
+                                                                        }).then(() => {
+                                                                            firebase.firestore().collection('posts').doc(item.key).set({
+                                                                                postInfo: { totalComments: item.postInfo.totalComments + 1 }
+                                                                            }, { merge: true })
+                                                                        }).then(() => {
+                                                                            this.setState({ spinner: false }, () => {
+                                                                                this.fetchingPost();
+                                                                                alert('Komentar terkirim');
+                                                                            })
+                                                                        })
+                                                                    }}>
+                                                                    <Text style={state.posts[index].inputComment === '' ? { color: '#598c5f' } : { color: '#fff' }}>Kirim</Text>
+                                                                </Button>
+                                                            </View>
+                                                        </CardItem>
+                                                    </Card>
+                                                </Content>
+                                            </Animated.View>
+                                        )}
+                                    />
+                                </KeyboardAvoidingView>
                             )}
 
                         {state.openPostOptionKey !== '' ? (
@@ -445,16 +507,13 @@ class Feed extends Component {
 
 
                     <View style={{
-                        backgroundColor: 'pink',
+                        backgroundColor: '#598c5f',
                         flex: 1,
                         width: screenWidth,
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <Text style={{ fontSize: 50, color: '#fff', fontWeight: "bold", textAlign: 'center' }}>TRENDS IS ON UNDER CONSTRUCTION</Text>
-                        <Button block onPress={() => fire.auth().signOut()} style={{ backgroundColor: '#fff', marginTop: 50 }}>
-                            <Text style={{ color: 'black' }}>Sign out</Text>
-                        </Button>
+                        <Text style={{ fontSize: 40, color: '#fff', fontWeight: "bold", textAlign: 'center' }}>TRENDS IS UNDER DEVELOPMENT</Text>
                     </View>
                 </Swiper>
             </>
@@ -473,6 +532,12 @@ const stackFeed = createStackNavigator({
     },
     OpenedPostComponent: {
         screen: OpenedPost,
+        navigationOptions: {
+            header: null
+        }
+    },
+    OpenedProfileComponent: {
+        screen: OpenedProfile,
         navigationOptions: {
             header: null
         }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, Animated, Easing, Dimensions, ScrollView, RefreshControl, Alert } from 'react-native';
+import { View, Image, Animated, Easing, Dimensions, ScrollView, RefreshControl, Alert, FlatList } from 'react-native';
 import { Container, Header, Left, Button, Icon, Body, Text, Right, Content, Card, CardItem, Thumbnail, Spinner, List, ListItem } from 'native-base';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
@@ -15,18 +15,31 @@ class OpenedPost extends React.Component {
         refreshing: false,
         openPostOptionKey: '',
         openPostOptionUid: '',
-        openPostOptionReport: ''
-
+        openPostOptionReport: '',
+        comments: [],
     }
 
     componentDidMount() {
         this.fetchPost();
+        this.fetchComment();
     }
 
     fetchPost = () => {
         firebase.firestore().collection('posts').doc(this.state.postKey)
             .get().then(snap => this.setState({ openedPost: snap.data(), refreshing: false }));
     };
+
+    fetchComment = () => {
+        const data = [];
+        firebase.firestore().collection('comments').where('postKey', '==', this.state.postKey).orderBy('mergeDate').get()
+            .then(snap => {
+                snap.forEach(doc => {
+                    data.push(doc.data())
+                });
+                data.reverse();
+                this.setState({ comments: data });
+            });
+    }
 
 
     render() {
@@ -141,7 +154,7 @@ class OpenedPost extends React.Component {
                                         </View>
                                         <View style={{ width: '100%', marginTop: 15, flexDirection: 'row', justifyContent: 'space-between' }}>
                                             <Button transparent style={{ justifyContent: 'center' }}>
-                                                <Text style={{ color: '#598c5f', fontSize: 10 }}>{item.postInfo.totalComments} {item.postInfo.totalComments > 1 ? 'Comments' : 'Comment'}</Text>
+                                                <Text style={{ color: '#598c5f', fontSize: 10 }}>{item.postInfo.totalComments} Komentar</Text>
                                             </Button>
                                             {item.postInfo.totalUpVote >= 20 ?
                                                 <Button rounded onPress={() => {
@@ -164,6 +177,25 @@ class OpenedPost extends React.Component {
                                                 : null}
                                         </View>
                                     </CardItem>
+                                    <List>
+                                        <FlatList
+                                            data={st.comments}
+                                            renderItem={({ item }) => {
+                                                <ListItem avatar>
+                                                    <Left>
+                                                        {/* <Thumbnail source={{ uri: '' }} /> */}
+                                                    </Left>
+                                                    <Body>
+                                                        <Text>sombdey</Text>
+                                                        <Text note>{item.comment.commentText}</Text>
+                                                    </Body>
+                                                    <Right>
+                                                        <Text note>3:43 pm</Text>
+                                                    </Right>
+                                                </ListItem>
+                                            }}
+                                        />
+                                    </List>
                                 </Card>
                             </Content>
                         </ScrollView>
