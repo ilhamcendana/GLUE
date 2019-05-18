@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import { View, KeyboardAvoidingView, Dimensions, Alert } from 'react-native';
 import {
     Container,
-    Content,
     Form,
     Item,
     Input,
@@ -24,8 +23,11 @@ export default class SignUpPage extends Component {
         signupPassValue: '',
         signupRePassValue: '',
         inputNamaProfile: '',
-        inputKelasProfile: '',
-        inputJurusanProfile: ''
+        inputTingkat: '1',
+        inputKJ: 'DB',
+        inputKK: '01',
+        inputJurusanProfile: '',
+        selectedJurusan: 1
     }
 
     static navigationOptions = {
@@ -48,21 +50,22 @@ export default class SignUpPage extends Component {
     inputNamaProfileEvent = e => {
         this.setState({ inputNamaProfile: e });
     };
-    inputKelasProfileEvent = e => {
-        this.setState({ inputKelasProfile: e });
-    };
+
     inputNPMProfileEvent = e => {
         this.setState({ inputNPMProfile: e });
     };
-    inputJurusanProfileEvent = e => {
-        this.setState({ inputJurusanProfile: e });
-    };
 
     signupEvent = () => {
-        const { signupEmailValue, signupRePassValue, signupPassValue, inputNamaProfile, inputKelasProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+        const { signupEmailValue, inputTingkat, inputKJ, inputKK, signupRePassValue, signupPassValue, inputNamaProfile, inputNPMProfile, inputJurusanProfile } = this.state;
         this.setState({ spinner: true });
-        if (inputNamaProfile === '' || signupRePassValue !== signupPassValue || inputKelasProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '' || inputNPMProfile.length !== 8) {
-            alert('Semua kolom tidak boleh kosong atau NPM dkurang dari 8 karakter');
+        if (inputNamaProfile === '' || signupEmailValue === '' || signupPassValue === '' || inputNPMProfile === '' || inputJurusanProfile === '') {
+            Alert.alert('INVALID', 'Semua kolom tidak boleh kosong atau NPM kurang dari 8 karakter');
+            this.setState({ spinner: false });
+        } else if (signupRePassValue !== signupPassValue) {
+            Alert.alert('Password tidak sama');
+            this.setState({ spinner: false });
+        } else if (inputNPMProfile.length !== 8) {
+            Alert.alert('NPM kurang atau lebih dari 8 karakter');
             this.setState({ spinner: false });
         } else {
             firebase.auth().createUserWithEmailAndPassword(signupEmailValue, signupPassValue)
@@ -76,7 +79,7 @@ export default class SignUpPage extends Component {
                             nama: inputNamaProfile,
                             profilePict: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c',
                             npm: inputNPMProfile,
-                            kelas: inputKelasProfile,
+                            kelas: inputTingkat + inputKJ + inputKK,
                             jurusan: inputJurusanProfile,
                             totalPost: 0,
                             totalVote: 0,
@@ -89,7 +92,6 @@ export default class SignUpPage extends Component {
                         }).then(() => {
                             this.setState({
                                 inputNamaProfile: '',
-                                inputKelasProfile: '',
                                 inputNPMProfile: '',
                                 inputJurusanProfile: '',
                                 signupEmailValue: '',
@@ -97,7 +99,7 @@ export default class SignUpPage extends Component {
                                 spinner: false,
                             });
                         });
-                        Alert.alert('an email verification has been sent to your email address');
+                        Alert.alert('Email verifikasi telah dikirim ke email anda');
                     }).catch((error) => {
                         alert(error);
                         this.setState({ spinner: false });
@@ -108,8 +110,11 @@ export default class SignUpPage extends Component {
     //END ALL SIGNUP EVENT ---------------------------
 
     render() {
-        const jurusan = ['Manajemen Informatika', 'Teknik Komputer', 'Manajemen Keuangan', 'Manajemen Pemasaran', 'Akuntansi', 'Teknik Informatika', 'Teknik Industri', 'Teknik Mesin', 'Teknik Elektro', 'Teknik Sipil', 'Arsitektur', 'Sistem Informasi', 'Sistem Komputer', 'Manajemen', 'Akuntansi D3', 'Psikologi', 'Sastra Inggris', 'Manajemen Sistem Informasi', 'Magister Manajemen', 'Teknik Elektro', 'Teknologi Informasi'];
-        const screenWidth = Dimensions.get('window').width;
+        const jurusan = ['D3 Manajemen Informatika', 'D3 Teknik Komputer', 'D3 Akuntansi', 'D3 Manajemen', 'D3 Kebidanan', 'S1 Sistem Informasi', 'S1 Sistem Komputer', 'S1 Teknik Informatika', 'S1 Teknik Elektro', 'S1 Teknik Mesin', 'S1 Teknik Industri', 'S1 Manajemen', 'S1 Akuntansi', 'S1 Teknik Sipil', 'S1 Teknik Arsitektur', 'S1 Psikologi', 'S1 Sastra'];
+        const tingkat = ['1', '2', '3', '4'];
+        const kode_jur = ['DB', 'DC', 'DA', 'DD', 'DE', 'KA', 'KB', 'IA', 'IB', 'IC', 'ID', 'EA', 'EB', 'TA', 'TB', 'PA', 'SA'];
+        const kode_kel = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
+        // const screenWidth = Dimensions.get('window').width;
         return (
             <Container style={{
                 flex: 1,
@@ -187,28 +192,48 @@ export default class SignUpPage extends Component {
                                         autoCapitalize='none'
                                         keyboardType='number-pad' />
                                 </Item>
-                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
+                                <Item style={{ borderColor: '#598c5f', paddingBottom: 10, alignItems: 'center' }}>
                                     <Label>Kelas</Label>
-                                    <Input
-                                        onChangeText={this.inputKelasProfileEvent}
-                                        value={this.state.inputKelasProfile}
-                                        autoCapitalize='sentences'
-
-                                    />
-                                </Item>
-                                <Item style={{ marginTop: 10, borderColor: '#598c5f' }}>
                                     <Picker
-                                        note={this.state.inputJurusanProfile === '' ? true : false}
-                                        placeholder='Pilih Jurusan'
-                                        mode="dropdown"
+                                        note={false}
+                                        placeholder='Kelas'
+                                        mode="dialog"
                                         iosIcon={<Icon name="arrow-down" />}
                                         headerBackButtonText="Back"
-                                        selectedValue={this.state.inputJurusanProfile}
-                                        onValueChange={this.inputJurusanProfileEvent}
-                                    >
-                                        {jurusan.sort().map(j => <Picker.Item label={j} key={j} value={j} />
-                                        )}
+                                        onValueChange={(e) => this.setState({ inputTingkat: e })}
+                                        selectedValue={this.state.inputTingkat}>
+
+                                        {tingkat.map(t => <Picker.Item label={t} key={t} value={t} />)}
+
                                     </Picker>
+                                    <Picker
+                                        note={false}
+                                        placeholder='Kelas'
+                                        mode="dialog"
+                                        iosIcon={<Icon name="arrow-down" />}
+                                        headerBackButtonText="Back"
+                                        onValueChange={(e, i) => this.setState({ inputKJ: e, selectedJurusan: i, inputJurusanProfile: jurusan[i] })}
+                                        selectedValue={this.state.inputKJ}>
+
+                                        {kode_jur.map(kj => <Picker.Item label={kj} key={kj} value={kj} />)}
+
+                                    </Picker>
+                                    <Picker
+                                        note={false}
+                                        placeholder='Kelas'
+                                        mode="dialog"
+                                        iosIcon={<Icon name="arrow-down" />}
+                                        headerBackButtonText="Back"
+                                        onValueChange={(e) => this.setState({ inputKK: e })}
+                                        selectedValue={this.state.inputKK}>
+
+                                        {kode_kel.map(kk => <Picker.Item label={kk} key={kk} value={kk} />)}
+
+                                    </Picker>
+
+                                </Item>
+                                <Item style={{ marginTop: 10, borderColor: '#598c5f', paddingVertical: 20 }}>
+                                    <Text>Jurusan: {jurusan[this.state.selectedJurusan]}</Text>
                                 </Item>
 
                                 <Button block rounded onPress={this.signupEvent}

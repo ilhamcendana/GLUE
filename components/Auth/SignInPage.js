@@ -1,16 +1,14 @@
 import React, { Component } from 'react';
-import { StyleSheet, View, KeyboardAvoidingView } from 'react-native';
+import { View, KeyboardAvoidingView, Alert } from 'react-native';
 import {
     Container,
-    Content,
     Form,
     Item,
     Input,
     Button,
     Text,
     Label,
-    Spinner,
-    H1
+    Spinner
 } from 'native-base';
 import * as firebase from 'firebase';
 
@@ -21,26 +19,12 @@ class SignInPage extends Component {
             signEmailValue: '',
             signPassValue: '',
             spinner: false,
-            errorLoginSignupMessage: '',
             isLogin: false
-
         }
-
     }
 
     static navigationOptions = {
         header: null,
-    };
-
-
-
-    //ALL LOGIN EVENT
-    inputEmailValChange = (e) => {
-        this.setState({ signEmailValue: e });
-    };
-
-    inputPassValChange = (e) => {
-        this.setState({ signPassValue: e });
     };
 
     loginEvent = () => {
@@ -53,15 +37,12 @@ class SignInPage extends Component {
 
                 } else {
                     this.setState({ spinner: false });
-                    alert('verifikasi dulu');
+                    Alert.alert('Email belum diverifikasi', 'Untuk sementara anda tidak dapat membuat sebuah post karena email anda belum diverifikasi');
                 }
             }).catch((e) => {
-                if (e === 'The email address is badly formatted.' || 'The password is invalid or the user does not have a password.') {
-                    this.setState({ errorLoginSignupMessage: 'Email atau Password salah!' });
-                } else {
-                    this.setState({ errorLoginSignupMessage: e });
-                }
-                alert(e);
+                console.log(e);
+                this.setState({ spinner: false });
+                Alert.alert('INVALID', 'Email atau Password salah!');
             });
     }
 
@@ -106,7 +87,7 @@ class SignInPage extends Component {
                                     autoCapitalize='none'
                                     keyboardType='email-address'
                                     returnKeyType='next'
-                                    onChangeText={this.inputEmailValChange}
+                                    onChangeText={(e) => this.setState({ signEmailValue: e })}
                                     value={this.state.signEmailValue}
                                 />
                             </Item>
@@ -115,7 +96,7 @@ class SignInPage extends Component {
                                 <Input
                                     secureTextEntry={true}
                                     returnKeyType='go'
-                                    onChangeText={this.inputPassValChange}
+                                    onChangeText={(e) => this.setState({ signPassValue: e })}
                                     value={this.state.signPassValue}
                                     autoCapitalize='none'
                                     onSubmitEditing={this.loginEvent}

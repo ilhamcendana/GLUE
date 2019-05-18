@@ -35,23 +35,28 @@ class ProfilePage extends Component {
     componentDidMount() {
         this.fetchProfileData();
         this.fetchingProfilePosts();
+
     }
 
     fetchProfileData = () => {
         const db = firebase.firestore();
         const { displayName, photoURL } = firebase.auth().currentUser;
-        db.collection('users').doc(firebase.auth().currentUser.uid).get().then((snap => {
-            this.setState({
-                kelasUser: snap.data().profile.kelas,
-                npmUser: snap.data().profile.npm,
-                jurusanUser: snap.data().profile.jurusan,
-                totalPost: snap.data().profile.totalPost,
-                totalTrends: snap.data().profile.totalTrends,
-                totalVote: snap.data().profile.totalVote,
-                namaUser: displayName,
-                profilPictUrl: photoURL
-            });
-        }));
+        db.collection('posts').orderBy('totalUpVote').where('totalUpVote', '>=', 20)
+            .get().then(snap => db.collection('users').doc(firebase.auth().currentUser.uid).set({ profile: { totalTrends: snap.size } }, { merge: true }))
+            .then(() => {
+                db.collection('users').doc(firebase.auth().currentUser.uid).get().then((snap => {
+                    this.setState({
+                        kelasUser: snap.data().profile.kelas,
+                        npmUser: snap.data().profile.npm,
+                        jurusanUser: snap.data().profile.jurusan,
+                        totalPost: snap.data().profile.totalPost,
+                        totalTrends: snap.data().profile.totalTrends,
+                        totalVote: snap.data().profile.totalVote,
+                        namaUser: displayName,
+                        profilPictUrl: photoURL
+                    });
+                }));
+            })
     };
 
     fetchingProfilePosts = () => {
@@ -107,12 +112,12 @@ class ProfilePage extends Component {
                     </Left>
                     <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>{this.state.swiperHeaderTitle}</Text></Body>
                     <Right style={{ flex: 1 }}>
-                        <Button transparent>
-                            <Icon type='Feather' name='more-horizontal' />
+                        <Button transparent onPress={() => this.refs.swiper.scrollBy(1)}>
+                            <Icon type='Feather' name='bell' />
                         </Button>
                     </Right>
                 </Header>
-                <Swiper loop={false} showsPagination={false} index={0} bounces={true}
+                <Swiper loop={false} showsPagination={false} index={0} bounces={true} ref='swiper'
                     onIndexChanged={(e) => e === 0 ? this.setState({ swiperHeaderTitle: 'Profile' }) : this.setState({ swiperHeaderTitle: 'Notification' })}>
                     <Container>
                         <ScrollView

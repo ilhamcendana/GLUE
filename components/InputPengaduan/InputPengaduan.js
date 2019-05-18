@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import { View, Dimensions, Animated, KeyboardAvoidingView } from 'react-native';
+import { View, Dimensions, Animated, KeyboardAvoidingView, ScrollView, Alert } from 'react-native';
 import { Spinner, Form, Textarea, Input, Item, Content, Icon, Left, Right, Button, Text, Toast, Header, Body, Thumbnail, Container, Picker } from 'native-base';
 import { ImagePicker, Permissions } from 'expo';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
-import { ScrollView } from 'react-native-gesture-handler';
+import ImageResizer from 'react-native-image-resizer';
 
 
 export default class InputPengaduan extends Component {
@@ -12,14 +12,16 @@ export default class InputPengaduan extends Component {
         spinner: false,
         postPict: '',
         postPictUrl: '',
+        resizedImageUri: '',
         postedAnim: new Animated.Value(0),
         success: false,
         caption: '',
         username: '',
         uid: '',
         profilePictUrl: '',
-        selectCategory: '',
-        currentTotal: 0
+        selectCategory: 'Info',
+        currentTotal: 0,
+        disablePostButton: false,
     }
 
     componentDidMount() {
@@ -83,6 +85,7 @@ export default class InputPengaduan extends Component {
     uploadProfilPict = async (uri) => {
         // Why are we using XMLHttpRequest? See:
         // https://github.com/expo/expo/issues/2402#issuecomment-443726662 
+
         const blob = await new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.onload = function () {
@@ -119,91 +122,95 @@ export default class InputPengaduan extends Component {
         const todayDate = date.getDate() + '-' + monthName[month] + '-' + date.getFullYear();
         const todayTime = date.getHours() + ':' + date.getMinutes();
         const mergeDate = `${date.getFullYear()}${(date.getMonth() + 1) < 10 ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1)}${date.getDate() < 10 ? '0' + date.getDate() : date.getDate()}${date.getHours() < 10 ? '0' + date.getHours() : date.getHours()}${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}${date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds()}`;
-        if (this.state.postPict !== '') {
-            this.uploadProfilPict(this.state.postPict)
-                .then(() => {
-                    const { username, uid, caption, postPictUrl, profilePictUrl, selectCategory } = this.state;
-                    firebase.firestore().collection("posts").add({
-                        nama: username,
-                        uid: uid,
-                        caption: caption,
-                        category: selectCategory,
-                        postPict: postPictUrl,
-                        profilePict: profilePictUrl,
-                        postInfo: {
+        if (firebase.auth().currentUser.emailVerified === true) {
+            if (this.state.postPict !== '') {
+                this.uploadProfilPict(this.state.postPict)
+                    .then(() => {
+                        const { username, uid, caption, postPictUrl, profilePictUrl, selectCategory } = this.state;
+                        firebase.firestore().collection("posts").add({
+                            nama: username,
+                            uid: uid,
+                            caption: caption,
+                            category: selectCategory,
+                            postPict: postPictUrl,
+                            profilePict: profilePictUrl,
                             totalUpVote: 0,
-                            totalReported: 0,
+                            postInfo: {
+                                totalReported: 0,
+                                totalComments: 0
+                            },
+                            userWhoLiked: {},
+                            userWhoReported: {},
+                            todayDate: todayDate,
+                            todayTime: todayTime,
+                            mergeDate: mergeDate,
+                            key: '',
                             isTrend: false,
-                            totalComments: 0
-                        },
-                        userWhoLiked: {},
-                        userWhoReported: {},
-                        todayDate: todayDate,
-                        todayTime: todayTime,
-                        mergeDate: mergeDate,
-                        key: '',
-                        inputComment: '',
-                        allComment: {}
-                    }).then((docRef) => {
-                        firebase.firestore().collection('posts').doc(docRef.id).set({ key: docRef.id }, { merge: true });
+                        }).then((docRef) => {
+                            firebase.firestore().collection('posts').doc(docRef.id).set({ key: docRef.id }, { merge: true });
+                        })
+                            .then(() => {
+                                const ref = firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid);
+                                ref.set({
+                                    profile: { totalPost: this.state.currentTotal + 1 }
+                                }, { merge: true })
+                            })
+                            .then(() => {
+                                this.setState({ success: true, spinner: false });
+                                this.postedAnim();
+                            })
+                            .catch((err) => {
+                                alert.alert(err);
+                                this.setState({ disablePostButton: false });
+                                console.log(err)
+                            });
                     })
-                        .then(() => {
-                            const ref = firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid);
-                            ref.set({
-                                profile: { totalPost: this.state.currentTotal + 1 }
-                            }, { merge: true })
-                        })
-                        .then(() => {
-                            this.setState({ success: true, spinner: false });
-                            this.postedAnim();
-                        })
-                        .catch((err) => {
-                            alert.alert(err);
-                            this.setState({ disablePostButton: false });
-                            console.log(err)
-                        });
-                })
-        } else {
-            const { username, uid, caption, postPictUrl, profilePictUrl, selectCategory } = this.state;
-            firebase.firestore().collection("posts").add({
-                nama: username,
-                uid: uid,
-                caption: caption,
-                postPict: postPictUrl,
-                profilePict: profilePictUrl,
-                category: selectCategory,
-                postInfo: {
+                    .catch(err => console.log(err));
+
+
+            } else {
+                const { username, uid, caption, postPictUrl, profilePictUrl, selectCategory } = this.state;
+                firebase.firestore().collection("posts").add({
+                    nama: username,
+                    uid: uid,
+                    caption: caption,
+                    postPict: postPictUrl,
+                    profilePict: profilePictUrl,
+                    category: selectCategory,
                     totalUpVote: 0,
-                    totalReported: 0,
+                    postInfo: {
+                        totalReported: 0,
+                        totalComments: 0
+                    },
+                    userWhoLiked: {},
+                    userWhoReported: {},
+                    todayDate: todayDate,
+                    todayTime: todayTime,
+                    mergeDate: mergeDate,
+                    key: '',
                     isTrend: false,
-                    totalComments: 0
-                },
-                userWhoLiked: {},
-                userWhoReported: {},
-                todayDate: todayDate,
-                todayTime: todayTime,
-                mergeDate: mergeDate,
-                key: '',
-                inputComment: '',
-                allComment: {}
-            }).then((docRef) => {
-                firebase.firestore().collection('posts').doc(docRef.id).set({ key: docRef.id }, { merge: true });
-            })
-                .then(() => {
-                    const ref = firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid);
-                    ref.set({
-                        profile: { totalPost: this.state.currentTotal + 1 }
-                    }, { merge: true })
+                }).then((docRef) => {
+                    firebase.firestore().collection('posts').doc(docRef.id).set({ key: docRef.id }, { merge: true });
                 })
-                .then(() => {
-                    this.setState({ success: true, spinner: false });
-                    this.postedAnim();
-                })
-                .catch((err) => {
-                    alert.alert(err);
-                    this.setState({ disablePostButton: false });
-                    console.log(err)
-                });
+                    .then(() => {
+                        const ref = firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid);
+                        ref.set({
+                            profile: { totalPost: this.state.currentTotal + 1 }
+                        }, { merge: true })
+                    })
+                    .then(() => {
+                        this.setState({ success: true, spinner: false });
+                        this.postedAnim();
+                    })
+                    .catch((err) => {
+                        Alert.alert(err);
+                        this.setState({ disablePostButton: false });
+                        console.log(err)
+                    });
+            }
+        } else {
+            Alert.alert('Email belum diverifikasi', 'Anda harus verifikasi email agar dapat membuat post');
+            this.setState({ spinner: false })
         }
     }
     render() {
@@ -240,9 +247,9 @@ export default class InputPengaduan extends Component {
                     <Body style={{ alignItems: 'center', flex: 1 }}><Text style={{ color: '#fff' }}>Create Post</Text></Body>
                     <Right style={{ flex: 1 }}>
                         <Button rounded small
-                            disabled={this.state.caption === '' ? true : false}
+                            disabled={this.state.caption === '' || this.state.disablePostButton === true ? true : false}
                             onPress={this.POSTING}
-                            style={this.state.caption === '' ? { backgroundColor: '#47684a', color: '#fff', alignItems: 'center' } : { backgroundColor: '#fff', alignItems: 'center' }}>
+                            style={this.state.caption === '' || this.state.disablePostButton === true ? { backgroundColor: '#47684a', color: '#fff', alignItems: 'center' } : { backgroundColor: '#fff', alignItems: 'center' }}>
                             <Text style={{ color: '#598c5f' }}>Post</Text>
                         </Button>
                     </Right>
@@ -275,7 +282,10 @@ export default class InputPengaduan extends Component {
                                     rowSpan={5}
                                     autoFocus={true}
                                     placeholder='isi pengaduan'
-                                    returnKeyType='default' onChangeText={(e) => this.setState({ caption: e })} value={this.state.caption} />
+                                    returnKeyType='default'
+                                    onChangeText={(e) => {
+                                        this.setState({ caption: e });
+                                    }} value={this.state.caption} />
                             </Form>
                             {PreviewPict}
                         </KeyboardAvoidingView>

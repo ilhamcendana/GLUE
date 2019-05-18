@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
-import { View, Switch, Alert } from 'react-native';
-import { Container, Header, Body, Thumbnail, Text, Icon, Right, Content, List, ListItem, Left, Button, Badge, Footer, FooterTab } from 'native-base';
-import { DrawerItems } from 'react-navigation';
+import { View, Alert } from 'react-native';
+import { Container, Header, Body, Thumbnail, Text, Icon, Content, List, ListItem, Button, Footer, FooterTab } from 'native-base';
 import * as firebase from 'firebase';
 import 'firebase/firestore';
 
@@ -17,6 +16,10 @@ class CustomDrawer extends Component {
     }
 
     fetchDrawer = () => {
+        if (firebase.auth().currentUser.emailVerified) {
+            firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid)
+                .set({ profile: { isVerified: true } }, { merge: true })
+        }
         firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid).onSnapshot(snap => {
             this.setState({
                 nama: snap.data().profile.nama,
@@ -34,12 +37,20 @@ class CustomDrawer extends Component {
                         <View>
                             <View style={{
                                 borderRadius: 15, justifyContent: 'center', alignItems: 'center', width: 30, height: 30, position: 'absolute', right: 0, zIndex: 5,
-                                backgroundColor: this.state.isVerified ? '#4ba86a' : '#ce164d', flex: 1
-                            }}><Icon style={{ fontSize: 15, color: '#fff' }} type='Feather' name={this.state.isVerified ? 'check' : 'x'} /></View>
+                                backgroundColor: this.state.isVerified === true ? '#4ba86a' : '#ce164d', flex: 1
+                            }}><Icon style={{ fontSize: 15, color: '#fff' }} type='Feather' name={this.state.isVerified === true ? 'check' : 'x'} /></View>
                             <Thumbnail source={this.state.profilPictUrl !== '' ? { uri: this.state.profilPictUrl } : require('../../assets/ProfileIcon.png')}
                                 style={{ width: 100, height: 100, borderRadius: 50 }} />
                         </View>
                         <Text style={{ marginTop: 15, color: '#fff' }}>{this.state.nama}</Text>
+                        {this.state.isVerified === true ? null : <Button
+                            onPress={() => {
+                                firebase.auth().currentUser.sendEmailVerification()
+                                    .then(() => Alert.alert('Verifikasi Email telah dikirim ke email anda', 'klik link lalu restart app'));
+                            }}
+                            small rounded bordered style={{ marginTop: 10, borderColor: '#fff' }}>
+                            <Text style={{ color: '#fff' }}>Kirim ulang email verifikasi</Text>
+                        </Button>}
                     </Body>
 
                 </Header>

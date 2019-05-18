@@ -82,7 +82,7 @@ class FillProfilePage extends Component {
         await Permissions.askAsync(Permissions.CAMERA);
         let result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
-            aspect: [3, 3]
+            aspect: [4, 3]
         });
         if (!result.cancelled) {
             this.setState({ profilePictUrl: result.uri });
@@ -109,7 +109,7 @@ class FillProfilePage extends Component {
         const date = new Date();
         const ref = firebase
             .storage()
-            .ref('PROFILE-PICTURE/' + 'PP_' + date.getDay() + '-' + date.getMonth() + '-' + date.getFullYear() + '::' + date.getMilliseconds());
+            .ref('PROFILE-PICTURE/' + 'PP_' + firebase.auth().currentUser.uid);
         const snapshot = await ref.put(blob);
 
         // We're done with the blob, close and release it
