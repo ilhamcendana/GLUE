@@ -160,10 +160,6 @@ class Feed extends Component {
         this.setState({ openPostOptionKey: key, openPostOptionUid: uid, openPostOptionReport: report });
     }
 
-    openPreviewImagePost = () => {
-        alert('ee')
-    }
-
     render() {
         const screenWidth = Dimensions.get('window').width;
         const screenHeight = Dimensions.get('window').height;
