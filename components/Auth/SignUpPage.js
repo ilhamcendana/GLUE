@@ -26,8 +26,8 @@ export default class SignUpPage extends Component {
         inputTingkat: '1',
         inputKJ: 'DB',
         inputKK: '01',
-        inputJurusanProfile: '',
-        selectedJurusan: 1
+        inputJurusanProfile: 'D3 Manajemen Informatika',
+        selectedJurusan: 0
     }
 
     static navigationOptions = {
@@ -56,7 +56,7 @@ export default class SignUpPage extends Component {
     };
 
     signupEvent = () => {
-        const { signupEmailValue, inputTingkat, inputKJ, inputKK, signupRePassValue, signupPassValue, inputNamaProfile, inputNPMProfile, inputJurusanProfile } = this.state;
+        const { selectedJurusan, signupEmailValue, inputTingkat, inputKJ, inputKK, signupRePassValue, signupPassValue, inputNamaProfile, inputNPMProfile, inputJurusanProfile } = this.state;
         this.setState({ spinner: true });
         if (inputNamaProfile === '' || signupEmailValue === '' || signupPassValue === '' || inputNPMProfile === '' || inputJurusanProfile === '') {
             Alert.alert('INVALID', 'Semua kolom tidak boleh kosong atau NPM kurang dari 8 karakter');
@@ -80,6 +80,10 @@ export default class SignUpPage extends Component {
                             profilePict: 'https://firebasestorage.googleapis.com/v0/b/forumpengaduan.appspot.com/o/defaultProfilePict%2FProfileIcon.png?alt=media&token=64afa9bb-ec14-4710-a298-bd2df8df457c',
                             npm: inputNPMProfile,
                             kelas: inputTingkat + inputKJ + inputKK,
+                            tingkat: inputTingkat,
+                            kode_jur: inputKJ,
+                            kode_kel: inputKK,
+                            selected_jur: selectedJurusan,
                             jurusan: inputJurusanProfile,
                             totalPost: 0,
                             totalVote: 0,

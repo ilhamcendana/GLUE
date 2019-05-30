@@ -24,9 +24,12 @@ import 'firebase/firestore';
 class FillProfilePage extends Component {
     state = {
         inputNamaProfile: '',
-        inputKelasProfile: '',
         inputNPMProfile: '',
+        inputTingkat: '',
+        inputKJ: '',
+        inputKK: '',
         inputJurusanProfile: '',
+        selectedJurusan: null,
         profilePictUrl: '',
         isVerified: '',
         userEmail: '',
@@ -57,7 +60,10 @@ class FillProfilePage extends Component {
     fetchProfileData = () => {
         firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid).onSnapshot(snap => {
             this.setState({
-                inputKelasProfile: snap.data().profile.kelas,
+                selectedJurusan: snap.data().profile.selected_jur,
+                inputTingkat: snap.data().profile.tingkat,
+                inputKJ: snap.data().profile.kode_jur,
+                inputKK: snap.data().profile.kode_kel,
                 inputNPMProfile: snap.data().profile.npm,
                 inputJurusanProfile: snap.data().profile.jurusan,
             });
@@ -120,71 +126,89 @@ class FillProfilePage extends Component {
     //END IMAGE FROM PHONE EVENT SIGNUP------------------------------
 
     changeEditProfile = () => {
-        const { inputJurusanProfile, inputKelasProfile, inputNPMProfile, inputNamaProfile, profilePictUrl } = this.state;
-        this.setState({ spinner: true });
+        const { selectedJurusan, inputTingkat, inputKJ, inputKK, inputNamaProfile, inputNPMProfile, inputJurusanProfile, profilePictUrl } = this.state;
 
-        if (this.state.oldProfilePictUrl !== this.state.profilePictUrl) {
-            this.uploadProfilPict(this.state.profilePictUrl)
-                .then(() => {
-                    firebase.auth().currentUser.updateProfile({
-                        displayName: inputNamaProfile,
-                        photoURL: profilePictUrl
-                    });
-
-                    firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid)
-                        .set({
-                            profile: {
-                                nama: inputNamaProfile,
-                                profilePict: profilePictUrl,
-                                kelas: inputKelasProfile,
-                                npm: inputNPMProfile,
-                                jurusan: inputJurusanProfile,
-                                profilePictUrl: profilePictUrl
-                            }
-                        }, { merge: true });
-
-                    for (let i = 0; i < this.state.posts.length; i++) {
-                        firebase.firestore().collection('posts').doc(this.state.posts[i]).set({
-                            profilePict: profilePictUrl,
-                            nama: inputNamaProfile
-                        }, { merge: true })
-                    }
-
-                }).then(() => {
-                    this.setState({ spinner: false })
-                    this.props.navigation.navigate('Profile');
-                    alert('success');
-                })
-                .catch((err) => alert(err))
+        if (inputNamaProfile === '' || inputNPMProfile === '' || inputJurusanProfile === '') {
+            Alert.alert('INVALID', 'Semua kolom tidak boleh kosong atau NPM kurang dari 8 karakter');
+            this.setState({ spinner: false });
+        } else if (inputNPMProfile.length !== 8) {
+            Alert.alert('NPM kurang atau lebih dari 8 karakter');
+            this.setState({ spinner: false });
         } else {
-            firebase.auth().currentUser.updateProfile({
-                displayName: inputNamaProfile,
-                photoURL: profilePictUrl
-            });
 
-            for (let i = 0; i < this.state.posts.length; i++) {
-                firebase.firestore().collection('posts').doc(this.state.posts[i]).set({
-                    nama: inputNamaProfile
-                }, { merge: true })
+            this.setState({ spinner: true });
+
+            if (this.state.oldProfilePictUrl !== this.state.profilePictUrl) {
+                this.uploadProfilPict(this.state.profilePictUrl)
+                    .then(() => {
+                        firebase.auth().currentUser.updateProfile({
+                            displayName: inputNamaProfile,
+                            photoURL: profilePictUrl
+                        });
+
+                        firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid)
+                            .set({
+                                profile: {
+                                    nama: inputNamaProfile,
+                                    profilePict: profilePictUrl,
+                                    npm: inputNPMProfile,
+                                    kelas: inputTingkat + inputKJ + inputKK,
+                                    tingkat: inputTingkat,
+                                    kode_jur: inputKJ,
+                                    kode_kel: inputKK,
+                                    jurusan: inputJurusanProfile,
+                                    selected_jur: selectedJurusan,
+                                    profilePictUrl: profilePictUrl
+                                }
+                            }, { merge: true });
+
+                        for (let i = 0; i < this.state.posts.length; i++) {
+                            firebase.firestore().collection('posts').doc(this.state.posts[i]).set({
+                                profilePict: profilePictUrl,
+                                nama: inputNamaProfile
+                            }, { merge: true })
+                        }
+
+                    }).then(() => {
+                        this.setState({ spinner: false })
+                        this.props.navigation.navigate('Profile');
+                        alert('success');
+                    })
+                    .catch((err) => alert(err))
+            } else {
+                firebase.auth().currentUser.updateProfile({
+                    displayName: inputNamaProfile,
+                    photoURL: profilePictUrl
+                });
+
+                for (let i = 0; i < this.state.posts.length; i++) {
+                    firebase.firestore().collection('posts').doc(this.state.posts[i]).set({
+                        nama: inputNamaProfile
+                    }, { merge: true })
+                }
+
+                firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid)
+                    .set({
+                        profile: {
+                            nama: inputNamaProfile,
+                            profilePict: profilePictUrl,
+                            npm: inputNPMProfile,
+                            kelas: inputTingkat + inputKJ + inputKK,
+                            tingkat: inputTingkat,
+                            kode_jur: inputKJ,
+                            kode_kel: inputKK,
+                            jurusan: inputJurusanProfile,
+                            selected_jur: selectedJurusan,
+                            profilePictUrl: profilePictUrl
+                        }
+                    }, { merge: true })
+                    .then(() => {
+                        this.setState({ spinner: false })
+                        this.props.navigation.navigate('Profile');
+                        alert('success');
+                    })
+                    .catch((err) => alert(err))
             }
-
-            firebase.firestore().collection('users').doc(firebase.auth().currentUser.uid)
-                .set({
-                    profile: {
-                        nama: inputNamaProfile,
-                        profilePict: profilePictUrl,
-                        kelas: inputKelasProfile,
-                        npm: inputNPMProfile,
-                        jurusan: inputJurusanProfile,
-                        profilePictUrl: profilePictUrl
-                    }
-                }, { merge: true })
-                .then(() => {
-                    this.setState({ spinner: false })
-                    this.props.navigation.navigate('Profile');
-                    alert('success');
-                })
-                .catch((err) => alert(err))
         }
 
     }
@@ -193,8 +217,10 @@ class FillProfilePage extends Component {
     render() {
         const screenWidth = Dimensions.get('window').width;
         const screenHeight = Dimensions.get('window').height;
-        const jurusan = ['Manajemen Informatika', 'Teknik Komputer', 'Manajemen Keuangan', 'Manajemen Pemasaran', 'Akuntansi', 'Teknik Informatika', 'Teknik Industri', 'Teknik Mesin', 'Teknik Elektro', 'Teknik Sipil', 'Arsitektur', 'Sistem Informasi', 'Sistem Komputer', 'Manajemen', 'Akuntansi D3', 'Psikologi', 'Sastra Inggris', 'Manajemen Sistem Informasi', 'Magister Manajemen', 'Teknik Elektro', 'Teknologi Informasi'];
-
+        const jurusan = ['D3 Manajemen Informatika', 'D3 Teknik Komputer', 'D3 Akuntansi', 'D3 Manajemen', 'D3 Kebidanan', 'S1 Sistem Informasi', 'S1 Sistem Komputer', 'S1 Teknik Informatika', 'S1 Teknik Elektro', 'S1 Teknik Mesin', 'S1 Teknik Industri', 'S1 Manajemen', 'S1 Akuntansi', 'S1 Teknik Sipil', 'S1 Teknik Arsitektur', 'S1 Psikologi', 'S1 Sastra'];
+        const tingkat = ['1', '2', '3', '4'];
+        const kode_jur = ['DB', 'DC', 'DA', 'DD', 'DE', 'KA', 'KB', 'IA', 'IB', 'IC', 'ID', 'EA', 'EB', 'TA', 'TB', 'PA', 'SA'];
+        const kode_kel = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
 
         return (
             <Container style={{
@@ -250,29 +276,49 @@ class FillProfilePage extends Component {
                                         autoCapitalize='none'
                                         keyboardType='number-pad' />
                                 </Item>
-                                <Item floatingLabel style={{ borderColor: '#598c5f', paddingBottom: 10 }}>
-                                    <Label>Kelas</Label>
-                                    <Input
-                                        onChangeText={(e) => this.setState({ inputKelasProfile: e })}
-                                        value={this.state.inputKelasProfile}
-                                        autoCapitalize='none'
 
-                                    />
-                                </Item>
-                                <Item style={{ marginTop: 10, borderColor: '#598c5f' }}>
-                                    <Label>Jurusan</Label>
+                                <Item style={{ borderColor: '#598c5f', paddingBottom: 10, alignItems: 'center' }}>
+                                    <Label>Kelas</Label>
                                     <Picker
-                                        note={this.state.inputJurusanProfile === '' ? true : false}
-                                        placeholder='Pilih Jurusan'
-                                        mode="dropdown"
+                                        note={false}
+                                        placeholder='Kelas'
+                                        mode="dialog"
                                         iosIcon={<Icon name="arrow-down" />}
                                         headerBackButtonText="Back"
-                                        selectedValue={this.state.inputJurusanProfile}
-                                        onValueChange={(e) => this.setState({ inputJurusanProfile: e })}
-                                    >
-                                        {jurusan.sort().map(j => <Picker.Item label={j} key={j} value={j} />
-                                        )}
+                                        onValueChange={(e) => this.setState({ inputTingkat: e })}
+                                        selectedValue={this.state.inputTingkat}>
+
+                                        {tingkat.map(t => <Picker.Item label={t} key={t} value={t} />)}
+
                                     </Picker>
+                                    <Picker
+                                        note={false}
+                                        placeholder='Kelas'
+                                        mode="dialog"
+                                        iosIcon={<Icon name="arrow-down" />}
+                                        headerBackButtonText="Back"
+                                        onValueChange={(e, i) => this.setState({ inputKJ: e, selectedJurusan: i, inputJurusanProfile: jurusan[i] })}
+                                        selectedValue={this.state.inputKJ}>
+
+                                        {kode_jur.map(kj => <Picker.Item label={kj} key={kj} value={kj} />)}
+
+                                    </Picker>
+                                    <Picker
+                                        note={false}
+                                        placeholder='Kelas'
+                                        mode="dialog"
+                                        iosIcon={<Icon name="arrow-down" />}
+                                        headerBackButtonText="Back"
+                                        onValueChange={(e) => this.setState({ inputKK: e })}
+                                        selectedValue={this.state.inputKK}>
+
+                                        {kode_kel.map(kk => <Picker.Item label={kk} key={kk} value={kk} />)}
+
+                                    </Picker>
+
+                                </Item>
+                                <Item style={{ marginTop: 10, borderColor: '#598c5f', paddingVertical: 20 }}>
+                                    <Text>Jurusan: {jurusan[this.state.selectedJurusan]}</Text>
                                 </Item>
 
                                 <View style={{ width: '100%', flexDirection: 'row-reverse', marginVertical: 40, justifyContent: 'space-around' }}>

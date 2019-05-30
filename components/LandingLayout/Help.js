@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Container, Content, Header, Left, Button, Icon, Body, Right } from 'native-base';
 
-const Help = () => {
+const Help = (props) => {
+    const { navigate } = props.navigation;
     const date = new Date();
     return (
         <Container>
